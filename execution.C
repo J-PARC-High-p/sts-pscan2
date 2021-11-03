@@ -145,6 +145,16 @@ std::string Get_file_name(int i) {return file_names[i];}
 //! Executing the analysis 
 int execution(){
   
+  //filename_data = "pscan/pscan_20211102_RedFEB8.txt";
+  filename_data = "pscan_samples/pscan_190308_1533_sn_008_asic_addr_4_040_028_055_186_vp_000_255_040_holes"; // ommit .txt as it will be added in the class trim_adc.
+  Analysis();
+  return 0;
+}
+
+// ............... oooo00000oooo........................
+//! Executing the analysis 
+int execution_multi(){
+  
   // Here is the directory of the test files, same place where root files will be created
   //TString dir = "/home/paper-plane/CBM/test/feb_b/feb_b_setup1/glob_top/russ_febs/vref_t_scan/";
   //TString dir = "/home/paper-plane/CBM/test/feb_b/feb_b_setup2/temp_tests/feb-b_9/";
@@ -169,7 +179,7 @@ int execution(){
   Read_file_tests();
   // Analysis function is called for every file in the list. At the end, everything is closed and root files can be accessed via TBrowser
   for (int i = 0; i<int(file_names.size()); i++){
-   filename_data= dir + Get_file_name(i);
+    filename_data= dir + TString(Get_file_name(i));
     Analysis();
     }
     

@@ -115,6 +115,10 @@ bool trim_adc::Check_root_file()
   filename_val = (filename_data+ ".txto");
   filename_data = (filename_data+".txt");
   scanfile.open(filename_data);		// Input here the file name you want to read. 
+  if (! scanfile.is_open() ) {
+    cout << " cannot open file " << filename_data << endl;
+    return false;
+  }
   ifstream rootfile;
   
   
@@ -275,9 +279,13 @@ bool trim_adc::Reading_file(int cut_db_pulses_user)
   
   for (vp =vp_min; vp<vp_max; vp+=vp_step) {
     for (ch =ch_min;ch<ch_max; ch++){
-      std::getline (scanfile,line);
+      if ( ! std::getline (scanfile,line) ) {
+	cout << "cannot read file " << endl;
+	exit(1);
+      }
       
       std::istringstream iss(line);
+      cout << line << endl;
       iss>>ele;
       iss>>fvp;
       iss>>ele;
