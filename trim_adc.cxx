@@ -30,7 +30,7 @@ ClassImp(trim_adc);
 trim_adc::trim_adc(TString filenameData)
 : ch(0),
   ch_min(0),
-  ch_max(128),
+  ch_max(127),
   ch_step(1),
   d(0),
   d_counter(0),
@@ -88,7 +88,7 @@ trim_adc::trim_adc(TString filenameData)
   thr_max(0),
   ch_sel(0)
 {
- for (ch=ch_min;ch<ch_max; ch++) {
+ for (ch=ch_min;ch<=ch_max; ch++) {
     for (d =d_min; d<d_max+1; d++) {
       for (vp = vp_min;vp<vp_max; vp+=vp_step) {
 	vcnt[ch][d][vp] = 0;
@@ -96,7 +96,7 @@ trim_adc::trim_adc(TString filenameData)
       }
     } 
   }
-  for (d=d_min;d<d_max;d++){
+  for (d=d_min;d<=d_max;d++){
      vp_set[d]=0;
   }
 }
@@ -141,7 +141,6 @@ bool trim_adc::Check_root_file()
    
    if (read_flag ==-1) return false;
    return true;
-  
 }
 
 //------------------------------------------+-----------------------------------
@@ -202,7 +201,7 @@ bool trim_adc::Init_ch(int chMin, int chMax, int chStep)
   ch_min = chMin;
   ch_max = chMax;
   if (chStep !=1) ch_step = chStep;
-  if (chMin<0 | chMin>chMax | chMax>128) return false;
+  if (chMin<0 | chMin>chMax | chMax>=128) return false;
   return true;
 }
 
@@ -258,7 +257,7 @@ bool trim_adc::Fitting_windows(int ampcalMin, int ampcalMax, int width)
   int thr_val = 0;							// thr_value to select the range around the fitting peak. For ASIC alone (thr_val = 10, sigma ~2; so 5*sigma ~10); For ASIC + sensor (thr_val ~20,30 or 40 to cover whole S-curve)
   float vp_d = (amp_cal_max-amp_cal_min)/(d_max-d_min);
   
-  for (d = d_min; d<d_max;d++){
+  for (d = d_min; d<=d_max;d++){
     vp_set[30-d] =(amp_cal_min + vp_d*(d-d_min));
   }
   return true;
@@ -279,7 +278,7 @@ bool trim_adc::Reading_file(int cut_db_pulses_user)
   std::cout<<"------------- Reading data file: -----------"<<std::endl;
   
   for (vp =vp_min; vp<vp_max; vp+=vp_step) {
-    for (ch =ch_min;ch<ch_max; ch++){
+    for (ch =ch_min;ch<=ch_max; ch++){
       if ( ! std::getline (scanfile,line) ) {
 	cout << "cannot read lines anymore " << endl;
 	return false;
@@ -292,7 +291,7 @@ bool trim_adc::Reading_file(int cut_db_pulses_user)
       iss>>ele;
       iss>>ele;
       cout << "vp " << fvp << "   ch " << ch <<  ":  ";
-      for (d=d_min;d<d_max+1;d++) {
+      for (d=d_min;d<=d_max;d++) {
 	//for (d=d_min;d<d_max;d++){
 	iss>>vcnt[ch][d][ivp];
 	if (vcnt[ch][d][ivp] > cut_db_pulses) vcnt[ch][d][ivp] = cut_db_pulses;		// Comment this line to see the full s_curves; this is just for cutting double pulses after understand it. the value (i.e. 400) depends on the number of injected pulses. This is defined in the pscan file
@@ -320,32 +319,26 @@ void trim_adc::Analysis(int cut_db_pulses_user, int width_user, int dcut_min_use
   Soft_val(true);
   
   cut_db_pulses = cut_db_pulses_user;
-  for (ch=ch_min;ch<ch_max;ch+=ch_step){
+  for (ch=ch_min;ch<=ch_max;ch+=ch_step){
     //val_file << ch << "\t\t";
     d_counter = 0;
     d_counter1 = 0;
     d_counter_erfc = 0;
     
     
-    for (d=d_min;d <d_max;d++) {
-      //for (d=d_min;d <d_max+1;d++) {
+    for (d=d_min;d <=d_max;d++) {
+      TString name;
+      name = TString::Format("h_d_%d_%d",ch,d);
+      hdcnt[ch][d]=new TH1F(name,"",300,0,300);
       
-      //char *histoname = new char[16];
-      char histoname[100];
-      sprintf(histoname, "h_d_%d_%d",ch,d);
+      name = TString::Format("h_scurve_%d_%d",ch,d);
+      hscurve[ch][d]=new TH1F(name,"",300,0,300);
       
-      //char *histoscurve = new char[16];
-      char histoscurve[100];
-      sprintf(histoscurve, "h_scurve_%d_%d",ch,d);
-      
-      //char *histodisc = new char[16];
-      char histodisc[100];
-      sprintf(histodisc, "h_disc_%d",d);
-      
-      hdcnt[ch][d]=new TH1F(histoname,"",300,0,300);
-      hscurve[ch][d]=new TH1F(histoscurve,"",300,0,300);
-      hdisc_sig[ch][d] = new TH1F(histodisc,"",31, 0,31);
-      hdisc_mean[ch][d] = new TH1F(histodisc,"",31,0,31);
+      name = TString::Format("h_disc_sig_%d_%d",ch,d);
+      hdisc_sig[ch][d] = new TH1F(name,"",31, 0,31);
+
+      name = TString::Format("h_disc_mean_%d_%d",ch,d);
+      hdisc_mean[ch][d] = new TH1F(name,"",31,0,31);
       ivp = 1;
       a = 0;
       sum_mean = 0;
@@ -353,7 +346,7 @@ void trim_adc::Analysis(int cut_db_pulses_user, int width_user, int dcut_min_use
       
       for ( vp = vp_min +vp_step; vp <vp_max; vp += vp_step ) {
 #ifdef KAZ_DEBUG
-	cout << "DEBUG vp = " << vp << endl;
+	//	cout << "DEBUG vp = " << vp << endl;
 #endif
 	d_cnt = vcnt_soft[ch][d][ivp]-vcnt_soft[ch][d][ivp-1];
 	//if (d_cnt <0 | d_cnt > 35) d_cnt =0;
@@ -424,7 +417,7 @@ void trim_adc::Analysis(int cut_db_pulses_user, int width_user, int dcut_min_use
 bool trim_adc::Soft_val(bool soft_flag)
 {
   if (soft_flag==true){
-    for (ch=ch_min;ch<ch_max;ch+=ch_step){
+    for (ch=ch_min;ch<=ch_max;ch+=ch_step){
       //for (d=d_min;d <d_max;d++){
       for (d=d_min;d <d_max+1;d++){
 	 ivp = 2;
@@ -455,7 +448,7 @@ bool trim_adc::Soft_val(bool soft_flag)
   }
   
   if (soft_flag == false){
-    for (ch=ch_min;ch<ch_max;ch+=ch_step){
+    for (ch=ch_min;ch<=ch_max;ch+=ch_step){
        //for (d=d_min;d <d_max;d++){
 	for (d=d_min;d <d_max+1;d++){
 	 ivp = 0;
@@ -912,7 +905,7 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
    n = 0;
    TCanvas *c4 =new TCanvas("c4","S-Curves_selected group");
    c4->Divide(6,5); 
-   for (ch=grp_sel;ch<ch_max;ch+=4){
+   for (ch=grp_sel;ch<=ch_max;ch+=4){
      c4->cd(i);
      hscurve[ch][0]->Draw("HIST");
      hscurve[ch][0]->GetXaxis()->SetTitle("Pulse amplitude [amp_cal_units]");
@@ -954,7 +947,7 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   py[0]->Draw("");
   py[0]->GetXaxis()->SetTitle("ADC value LSB");
   py[0]->GetYaxis()->SetTitle("Signal Vp amplitude [amp_cal_units]");
-  for (ch = ch_min+2; ch<ch_max;ch+=ch_step){
+  for (ch = ch_min+2; ch<=ch_max;ch+=ch_step){
     py[ch]->Draw("same");
     //py[ch]->SetLineColor(ch);
     
@@ -976,7 +969,7 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   ch =0;
   gStyle->SetOptStat(1111);
   gStyle->SetOptFit(1);
-  for (ch =ch_min; ch<ch_max;ch+=ch_step){
+  for (ch =ch_min; ch<=ch_max;ch+=ch_step){
     //if (ch>0 && ch< 127){
     py[ch]->Fit("pol1","R","",d_cut_max,d_cut_min+1);
     float par1_adc = py[ch]->GetFunction("pol1")->GetParameter(1);
@@ -989,7 +982,7 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
    
     
     float dnl = 0;
-    for (d=d_min-1;d<d_max; d++){
+    for (d=d_min-1;d<d_max+1; d++){
       dnl =  py[ch]->GetBinContent(d+1)-(par1_adc*d+par0_adc);
       h_adc_mean->Fill(dnl);
     }
@@ -1026,7 +1019,8 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   py[0]->Draw("");
   py[0]->GetXaxis()->SetTitle("ADC value");
   py[0]->GetYaxis()->SetTitle("Threshold level [amp_cal units]");
-  for (ch = ch_min+2; ch<ch_max-1;ch+=ch_step){
+  cout << "KAZ KAZ  watch out, decision based on ch_max maybe wrong" << endl;
+  for (ch = ch_min+2; ch<=ch_max;ch+=ch_step){
     py[ch]->Draw("same");    
   }
   
@@ -1153,8 +1147,9 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   hscurve[0][0]->Draw("");
   hscurve[0][0]->GetXaxis()->SetTitle("Vp [amp_cal_units]");
   hscurve[0][0]->GetYaxis()->SetTitle("Entries");
-  for (ch = ch_min; ch<ch_max-1; ch++){
-    for (d=d_min; d<d_max; d++){
+  cout << "WATCH OUT . DECISION regarding ch_max maybe wrong" << endl;
+  for (ch = ch_min; ch<=ch_max; ch++){
+    for (d=d_min; d<d_max+1; d++){
       hscurve[ch][d]->Draw("same");
       //hscurve[ch][d]->SetLineColor(d);
     }
@@ -1238,7 +1233,7 @@ void trim_adc::Display_histo_fast(int width_user, int* ch_comp){
   pad1_m->Draw();
   pad2_m->Draw();
   pad1_m->cd()->SetGrid(); 
-  for(ch=ch_min; ch<ch_max; ch++){
+  for(ch=ch_min; ch<=ch_max; ch++){
    hmean_f_disc_30->Fill(ch,hmeanf->GetBinContent(ch+1,31)); 
   }
   hmean_f_disc_30->Draw("");
@@ -1264,7 +1259,7 @@ void trim_adc::Display_histo_fast(int width_user, int* ch_comp){
  
   pad2_m->cd()->SetGrid(); 
   
-  for (int j=1; j<ch_max+1; j++){
+  for (int j=1; j<=ch_max; j++){
     mean_adc = hmean_f_disc_30->GetBinContent(j);
     mean_fast = hmean_fast->GetBinContent(j);
     diff = mean_adc- mean_fast;
@@ -1280,7 +1275,7 @@ void trim_adc::Display_histo_fast(int width_user, int* ch_comp){
   
   c_fast->cd(4)->SetGrid();
   
-  for(ch=ch_min; ch<ch_max; ch++){
+  for(ch=ch_min; ch<=ch_max; ch++){
    hfit_s_disc_30->Fill(ch,hsigef->GetBinContent(ch+1,31)*350); 
   }
   hfit_s_disc_30->Draw("");
@@ -1317,7 +1312,7 @@ void trim_adc::Display_histo_fast(int width_user, int* ch_comp){
   hscurve[0][31]->GetYaxis()->SetTitle("Number of counts");
   hscurve[0][31]->SetLineColor(kRed);
   hscurve[0][31]->SetLineWidth(2);
-  for(ch =ch_min+1; ch<ch_max; ch++){
+  for(ch =ch_min+1; ch<=ch_max; ch++){
     hscurve[ch][31]->Draw("LSAME");
     hscurve[ch][31]->SetLineWidth(2);
     if (ch%4 == 0) hscurve[ch][31]->SetLineColor(kRed);
@@ -1327,7 +1322,7 @@ void trim_adc::Display_histo_fast(int width_user, int* ch_comp){
   }
   
  c_fast_disc->cd(2)->SetGrid();
- for (int j = 1; j<ch_max+1; j++){
+ for (int j = 1; j<=ch_max; j++){
     hmean_fast_disc->Fill(hmean_fast->GetBinContent(j));
   }
  hmean_fast_disc->Draw("");

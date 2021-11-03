@@ -14,7 +14,7 @@ void Analysis(){
   // ............... oooo00000oooo........................
   //! Variables for reading, analyzing data and displaying histograms
   int ch_min = 0;
-  int ch_max = 128;
+  int ch_max = 127;
   int ch_step =1;
   
   int grp_min = 0;
@@ -22,7 +22,7 @@ void Analysis(){
   int grp_step = 1;
   
   int d_min = 0;
-  int d_max = 31;
+  int d_max = 31; // 5-bit ADC= 0-->31
   int d_step = 1;
   
   int vp_min = 40;
@@ -76,12 +76,13 @@ void Analysis(){
   sts->Analysis(cut_db_pulses, width, dcut_min_user, dcut_max_user, test_ch, true, true, read_fast);
   
   // Display everything. 
+  /*
   cout << "Display_histo_adc" << endl;
   sts->Display_histo_adc(width, dcut_min_user, dcut_max_user, ch_comp, grp_sel);
   if (read_fast == true) sts->Display_histo_fast(width,ch_comp);
   sts->Display_values(ch_comp);
   sts->Close_root_file();
-  
+  */
 }
 
 // ............... oooo00000oooo........................
@@ -182,8 +183,8 @@ int execution_multi(){
   for (int i = 0; i<int(file_names.size()); i++){
     filename_data= dir + TString(Get_file_name(i));
     Analysis();
-    }
-    
-    
- return 0;
+  }
+  
+  
+  return 0;
 }
