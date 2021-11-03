@@ -44,8 +44,8 @@ class trim_adc
   int vp_min;
   int vp_max;
   int vp_step;
-  int vcnt[130][32][250];   
-  int vcnt_soft[130][32][250];
+  int vcnt[130][32][260];   
+  int vcnt_soft[130][32][260];
   uint32_t cnt_val;
   
   // variables for data processing

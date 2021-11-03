@@ -72,10 +72,11 @@ void Analysis(){
 
   // Analysis function in .cxx 
   // Analysis (cut_db_pulses, width, discriminators to exclude min, discriminator to exclude max, test channel to display, ADC noise fitting, ADC noise calc, find noise fast disc)
-  
+  cout << "TEST " << endl;
   sts->Analysis(cut_db_pulses, width, dcut_min_user, dcut_max_user, test_ch, true, true, read_fast);
   
   // Display everything. 
+  cout << "Display_histo_adc" << endl;
   sts->Display_histo_adc(width, dcut_min_user, dcut_max_user, ch_comp, grp_sel);
   if (read_fast == true) sts->Display_histo_fast(width,ch_comp);
   sts->Display_values(ch_comp);

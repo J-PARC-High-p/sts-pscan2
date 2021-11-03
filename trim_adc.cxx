@@ -21,6 +21,7 @@
 #include <TBrowser.h>
 #include "TObject.h"
 
+#define KAZ_DEBUG 1
 
 ClassImp(trim_adc);
 
@@ -280,12 +281,12 @@ bool trim_adc::Reading_file(int cut_db_pulses_user)
   for (vp =vp_min; vp<vp_max; vp+=vp_step) {
     for (ch =ch_min;ch<ch_max; ch++){
       if ( ! std::getline (scanfile,line) ) {
-	cout << "cannot read file " << endl;
-	exit(1);
+	cout << "cannot read lines anymore " << endl;
+	return false;
       }
       
       std::istringstream iss(line);
-      cout << line << endl;
+      //      cout << line << endl;
       iss>>ele;
       iss>>fvp;
       iss>>ele;
@@ -301,7 +302,8 @@ bool trim_adc::Reading_file(int cut_db_pulses_user)
     }
     ivp++;
   }
-   
+  std::cout<<"------------- Finished reading data file: -----------"<<std::endl;
+  return true;
 }
 
 
@@ -309,7 +311,9 @@ bool trim_adc::Reading_file(int cut_db_pulses_user)
 //! Analyzing the data
 void trim_adc::Analysis(int cut_db_pulses_user, int width_user, int dcut_min_user,int dcut_max_user, int ch_sel_user, bool fit, bool calc, bool fast_fit)
 {
-  
+#ifdef KAZ_DEBUG
+  cout << "The begining of trim_adc::Analysis" << endl;
+#endif
   ch_sel = ch_sel_user;
 //   val_file.open(filename_val);
   
@@ -323,16 +327,19 @@ void trim_adc::Analysis(int cut_db_pulses_user, int width_user, int dcut_min_use
     d_counter_erfc = 0;
     
     
-    //for (d=d_min;d <d_max;d++) {
-    for (d=d_min;d <d_max+1;d++) {
+    for (d=d_min;d <d_max;d++) {
+      //for (d=d_min;d <d_max+1;d++) {
       
-      char *histoname = new char[16];
+      //char *histoname = new char[16];
+      char histoname[100];
       sprintf(histoname, "h_d_%d_%d",ch,d);
       
-      char *histoscurve = new char[16];
+      //char *histoscurve = new char[16];
+      char histoscurve[100];
       sprintf(histoscurve, "h_scurve_%d_%d",ch,d);
       
-      char *histodisc = new char[16];
+      //char *histodisc = new char[16];
+      char histodisc[100];
       sprintf(histodisc, "h_disc_%d",d);
       
       hdcnt[ch][d]=new TH1F(histoname,"",300,0,300);
@@ -345,6 +352,9 @@ void trim_adc::Analysis(int cut_db_pulses_user, int width_user, int dcut_min_use
       sum_delta = 0.000001;
       
       for ( vp = vp_min +vp_step; vp <vp_max; vp += vp_step ) {
+#ifdef KAZ_DEBUG
+	cout << "DEBUG vp = " << vp << endl;
+#endif
 	d_cnt = vcnt_soft[ch][d][ivp]-vcnt_soft[ch][d][ivp-1];
 	//if (d_cnt <0 | d_cnt > 35) d_cnt =0;
 	if (d_cnt <0) d_cnt =0;
@@ -472,15 +482,14 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
   d_cut_max = 30-d_cut_max;
   
   if (d_cut_min < 0 | d_cut_max > 30) return false;
-  
   else { 
     if (d>=d_cut_max && d<=d_cut_min) {
       int binmax = hdcnt[ch][d]->GetMaximumBin();
       float x =hdcnt[ch][d]->GetXaxis()->GetBinCenter(binmax); 
       
       /*
-      thr_min = (int)(vp_set[d]-width); 
-      thr_max = (int)(vp_set[d]+width); 
+	thr_min = (int)(vp_set[d]-width); 
+	thr_max = (int)(vp_set[d]+width); 
       */
       
       thr_min = (int)(x-width); 
@@ -492,7 +501,7 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
       if (d >28 ){thr_min = 0.; thr_max = 80.;}
       
       
-      fit_state0:
+    fit_state0:
       TFitResultPtr f_s1; 
       f_s1= hdcnt[ch][d]->Fit("gaus","SWLQR","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max
       //f_s1= hdcnt[ch][d]->Fit("gaus","SWL"); // fitting disc in the range thr_min-thr_max
@@ -503,17 +512,17 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
       if ( fitstatus == 0 && hdcnt[ch][d]->GetFunction("gaus")->GetChisquare()!=0) {
 	
 	/*mean_tmp = f_s1->Parameter(1);
-	sigma_tmp = f_s1->Parameter(2);
-	TF1 *f1 = new TF1("f1", "gaus", mean_tmp-4*sigma_tmp, mean_tmp+4*sigma_tmp);
-	f1->SetParameter(1,mean_tmp);
-	
-	hdcnt[ch][d]->Fit("f1","SWLQR","",mean_tmp-4*sigma_tmp, mean_tmp+4*sigma_tmp );
-	
-	
-	f_s1mean+= hdcnt[ch][d]->GetFunction("f1")->GetParameter(1);
-	f_sigma2 = hdcnt[ch][d]->GetFunction("f1")->GetParameter(2);
-	f_mean = hdcnt[ch][d]->GetFunction("f1")->GetParameter(1);
-	f_sigma = hdcnt[ch][d]->GetFunction("f1")->GetParameter(2);
+	  sigma_tmp = f_s1->Parameter(2);
+	  TF1 *f1 = new TF1("f1", "gaus", mean_tmp-4*sigma_tmp, mean_tmp+4*sigma_tmp);
+	  f1->SetParameter(1,mean_tmp);
+	  
+	  hdcnt[ch][d]->Fit("f1","SWLQR","",mean_tmp-4*sigma_tmp, mean_tmp+4*sigma_tmp );
+	  
+	  
+	  f_s1mean+= hdcnt[ch][d]->GetFunction("f1")->GetParameter(1);
+	  f_sigma2 = hdcnt[ch][d]->GetFunction("f1")->GetParameter(2);
+	  f_mean = hdcnt[ch][d]->GetFunction("f1")->GetParameter(1);
+	  f_sigma = hdcnt[ch][d]->GetFunction("f1")->GetParameter(2);
 	*/
 	
 	
@@ -554,17 +563,21 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
 	}
 	//delete f1;
       }
-           
+      
       else {
-	  cout << "fit not ok" << endl;
+	cout << "fit not ok" << endl;
       }     
       cout<<endl; 
-
-    hmeanf->Fill(ch,d,f_mean);
-    hsigef->Fill(ch,d,f_sigma);
-    f_s1mean = f_s1mean/d_max;
+      
+      hmeanf->Fill(ch,d,f_mean);
+      hsigef->Fill(ch,d,f_sigma);
+      f_s1mean = f_s1mean/d_max;
+    }
   }
-  }
+#ifdef KAZ_DEBUG
+  cout << "Fit_values returns true for now. check if it is ok." << endl;
+#endif
+  return true;
 }
 
 
@@ -647,8 +660,12 @@ bool trim_adc::Fit_values_erfc(int width, int d_cut_min, int d_cut_max, int cut_
     f_s1mean_erfc = f_s1mean_erfc/d_max;
     
     delete f_erfc;
+    }
   }
-  }
+#ifdef KAZ_DEBUG
+  cout << "Fit_values_erfc returns true for now. check if it is ok." << endl;
+#endif
+  return true;
 }
 
 //------------------------------------------+-----------------------------------
@@ -723,6 +740,11 @@ bool trim_adc::Calc_values(int width, int d_cut_min, int d_cut_max)
    hsige->Fill(ch,d,sigma); 
     }
   }
+
+#ifdef KAZ_DEBUG
+  cout << "Calc_values returns true for now. check if it is ok." << endl;
+#endif
+  return true;
 }
 
 
