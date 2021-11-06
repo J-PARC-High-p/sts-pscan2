@@ -147,8 +147,9 @@ bool trim_adc::Check_root_file()
 //! Close root_file
 void trim_adc::Close_root_file()
 {
-   file1->Close();
-   scanfile.close();
+  hmeanf->Write();
+  file1->Close();
+  scanfile.close();
 }
 //------------------------------------------+-----------------------------------
 //! Create histograms
@@ -531,12 +532,15 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
 	  f_sigma = hdcnt[ch][d]->GetFunction("f1")->GetParameter(2);
 	*/
 	
-	
 	f_s1mean+= f_s1->Parameter(1);
 	f_sigma2 = f_s1->Parameter(2);
 	f_mean = f_s1->Parameter(1);
 	f_sigma = f_s1->Parameter(2);
-	
+
+
+	#ifdef KAZ_DEBUG
+	cout << TString::Format("hdcnt[%d][%d]  mean %lf",ch,d,f_mean) << endl;
+	#endif
 	
 	if (d==30) f_mean_d1=f_s1->Parameter(1);
 	if (d==10) f_mean_d20=f_s1->Parameter(1);
@@ -575,7 +579,10 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
       }     
       cout<<endl; 
       
-      hmeanf->Fill(ch,d,f_mean);
+      //hmeanf->Fill(ch,d,f_mean);
+      int ibin = hmeanf->FindBin(ch,d);
+      hmeanf->SetBinContent(ibin,f_mean);
+      hmeanf->SetBinError(ibin,f_sigma);
       hsigef->Fill(ch,d,f_sigma);
       f_s1mean = f_s1mean/d_max;
     }
@@ -971,6 +978,7 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
     char *h_adc_linearity = new char[16];
     sprintf(h_adc_linearity, "h_quality_%d",ch);
     py[ch] = hmeanf->ProjectionY(h_adc_linearity,j,j);
+    py[ch]->Write();
   }
   py[0]->Draw("");
   py[0]->GetXaxis()->SetTitle("ADC value LSB");
