@@ -201,7 +201,10 @@ bool trim_adc::Init_ch(int chMin, int chMax, int chStep)
   ch_min = chMin;
   ch_max = chMax;
   if (chStep !=1) ch_step = chStep;
-  if (chMin<0 | chMin>chMax | chMax>=128) return false;
+  if (chMin<0 | chMin>chMax | chMax>=128) {
+    cout << "Init_ch: chMin or chMax is out of range." << endl;
+    return false;
+  }
   return true;
 }
 
@@ -213,7 +216,10 @@ bool trim_adc::Init_grp(int grpMin, int grpMax, int grpStep)
   grp_min = grpMin;
   grp_max = grpMax;
   if (grpStep !=1) grp_step = grpStep;
-  if (grpMin<0 | grpMin>grpMax | grpMax>4) return false;
+  if (grpMin<0 | grpMin>grpMax | grpMax>4){
+    cout << "Init_grp: grpMin or grpMax is out of range." << endl;
+    return false;
+  }
   return true;
 }
 
@@ -225,7 +231,10 @@ bool trim_adc::Init_d(int dMin, int dMax, int dStep)
   d_min = dMin;
   d_max = dMax;
   if (dStep !=1) d_step = dStep;
-  if (dMin<0 | dMin>dMax | dMax>31) return false;
+  if (dMin<0 | dMin>dMax | dMax>31){
+    cout << "Init_d: dMin or dMax is out of range." << endl;
+    return false;
+  }
   return true;
 }
 
@@ -364,11 +373,10 @@ void trim_adc::Analysis(int cut_db_pulses_user, int width_user, int dcut_min_use
       
       // for debbuging...
       
-      if (ch==ch_sel){
-	hscurve[ch][d]->Write();
-	hdcnt[ch][d]->Write();
-	
-      }
+      //if (ch==ch_sel){
+      hscurve[ch][d]->Write();
+      hdcnt[ch][d]->Write();
+      //}
       
       //if (fit == true && d<31) Fit_values(width_user);
       //if (calc == true && d<31) Calc_values(width_user);
@@ -430,19 +438,20 @@ bool trim_adc::Soft_val(bool soft_flag)
 	 vcnt_soft[ch][d][vp_max-vp_min-1]= vcnt[ch][d][vp_max-vp_min-1];
 	 vcnt_soft[ch][d][vp_max-vp_min-2]= vcnt[ch][d][vp_max-vp_min-2];
 	 for ( vp = vp_min +2*vp_step; vp <vp_max-2*vp_step; vp += vp_step ){
-	   d_cnt0 = vcnt[ch][d][ivp]-vcnt[ch][d][ivp-1];
+	   d_cnt0 = vcnt[ch][d][ivp]-vcnt[ch][d][ivp-1]; 
 	   d_cnt1 = vcnt[ch][d][ivp+1]-vcnt[ch][d][ivp];
-	   if (d_cnt0 < -10 &&  d_cnt1 > 10) {vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp+1])/2.); }
-	   else if (d_cnt0 >10 &&  d_cnt1 <-10) {vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp+1])/2.);}
-	   else {
+	   if (d_cnt0 < -10 &&  d_cnt1 > 10) {
+	     vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp+1])/2.);
+	   }else if (d_cnt0 >10 &&  d_cnt1 <-10) {
+	     vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp+1])/2.);
+	   } else {
 	     vcnt_soft[ch][d][ivp] = vcnt[ch][d][ivp];
-	     
 	   //vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp]+vcnt[ch][d][ivp+1])/3);
 	   //vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-2]+vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp]+vcnt[ch][d][ivp+1]+vcnt[ch][d][ivp+2])/5);
 	   //vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp])/2);
-	  }
-	  ivp++;
-	}
+	   }
+	   ivp++;
+	 }
       }
     }
   }
@@ -496,7 +505,11 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
       
     fit_state0:
       TFitResultPtr f_s1; 
-      f_s1= hdcnt[ch][d]->Fit("gaus","SWLQR","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max
+      //f_s1= hdcnt[ch][d]->Fit("gaus","SWLQR","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max
+#ifdef KAZ_DEBUG
+      cout << TString::Format("hdcnt[%d][%d]->Fit(\"gaus\",\"SWLQ\");",ch,d) << endl;
+#endif
+      f_s1= hdcnt[ch][d]->Fit("gaus","SWLQ","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max.
       //f_s1= hdcnt[ch][d]->Fit("gaus","SWL"); // fitting disc in the range thr_min-thr_max
       Int_t fitstatus = f_s1;
       float mean_tmp =0;
@@ -611,6 +624,9 @@ bool trim_adc::Fit_values_erfc(int width, int d_cut_min, int d_cut_max, int cut_
       TFitResultPtr f_s1; 
       //f_s1= hdcnt[ch][d]->Fit("f_erfc","SWLQR","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max
       f_erfc->SetParameters(plateau,plateau/2,x,5);
+#ifdef KAZ_DEBUG
+      cout << TString::Format("hscurve[%d][%d]->Fit(\"f_erfc\",\"SWR\");",ch,d)  << endl;
+#endif
       f_s1= hscurve[ch][d]->Fit("f_erfc", "SWR", "",thr_min, thr_max); // fitting disc in the range thr_min-thr_max
       Int_t fitstatus = f_s1;
       float mean_tmp =0;
@@ -749,6 +765,9 @@ void trim_adc::Fitting_Fast(int width){
   thr_max = (int)(vp_set[30]+width);
   
   TFitResultPtr f_s2; 
+#ifdef KAZ_DEBUG
+      cout << TString::Format("hdcnt[%d][%d]->Fit(\"gaus\",\"SWLQR\"); in Fitting_Fast()",ch,31) << endl;
+#endif
   f_s2= hdcnt[ch][31]->Fit("gaus","SWLQR","",20,70);
   Int_t fitstatus = f_s2;
       if ( fitstatus == 0 && hdcnt[ch][31]->GetFunction("gaus")->GetChisquare()!=0){
@@ -775,7 +794,10 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   c1->cd();
   thr_min = (int)(vp_set[0]-width_user); 
   thr_max = (int)(vp_set[0]+width_user);
-  hdcnt[ch_sel][0]->Draw("");
+  hdcnt[ch_sel][0]->Draw("HIST");
+#ifdef KAZ_DEBUG
+      cout << "Fit option :hdcnt->Fit  SWQR" << endl;
+#endif
   hdcnt[ch_sel][0]->Fit("gaus","SWQR","", thr_min,thr_max);
   //hdcnt[ch_sel][0]->Fit("gaus","SWL");
   c1->Close();
@@ -785,12 +807,15 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   TCanvas *c2 =new TCanvas("c2","c2");
   c2->Divide(6,6);
   c2->cd(1);
-  hdcnt[ch_sel][30]->Draw("");
+  hdcnt[ch_sel][30]->Draw("HIST");
+#ifdef KAZ_DEBUG
+      cout << "Fit option :hdcnt->Fit  SWQR" << endl;
+#endif
   hdcnt[ch_sel][30]->Fit("gaus","SWQR","",10,80);
   //hdcnt[ch_sel][30]->Fit("gaus","SW");
   for (d=29; d>=d_cut_max;d--){
     c2->cd(n);
-    hdcnt[ch_sel][d]->Draw("");
+    hdcnt[ch_sel][d]->Draw("HIST");
     thr_min = (int)(vp_set[d]-width_user); 
     thr_max = (int)(vp_set[d]+width_user); 
     n++;
@@ -804,12 +829,15 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   //TF1 *f_erfc = new TF1("f_erfc", "[0]-[1]*TMath::Erfc((x-[2])/(sqrt(2)*[3]))",0,250);
   c2_erfc->Divide(6,6);
   c2_erfc->cd(1);
-  hscurve[ch_sel][30]->Draw("");
+  hscurve[ch_sel][30]->Draw("HIST");
+#ifdef KAZ_DEBUG
+  cout << TString::Format("hscurve[%d][%d]->Fit(\"f_erfc\",\"SWQRN\"); in Display_histo_adc()",ch_sel,30) << endl;
+#endif
   hscurve[ch_sel][30]->Fit("f_erfc","SWQRN","",10,80);
   //hdcnt[ch_sel][30]->Fit("gaus","SW");
   for (d=29; d>=d_cut_max;d--){
     c2_erfc->cd(n);
-    hscurve[ch_sel][d]->Draw("");
+    hscurve[ch_sel][d]->Draw("HIST");
     thr_min = (int)(vp_set[d]-width_user); 
     thr_max = (int)(vp_set[d]+width_user); 
     
@@ -823,13 +851,13 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   gStyle->SetOptFit(0);
   TCanvas *c_scurves =new TCanvas("c_scurves","S-Curves_selected channel",1200,900);
   c_scurves->cd(1)->SetGrid();
-  hscurve[ch_sel][30]->Draw("");
+  hscurve[ch_sel][30]->Draw("HIST");
   hscurve[ch_sel][30]->GetXaxis()->SetTitle("Pulse amplitude [amp_cal_units]");
   hscurve[ch_sel][30]->GetYaxis()->SetTitle("Number of counts");
   hscurve[ch_sel][30]->SetLineWidth(2);
    for (d=d_min+1;d <31;d++) {
 	n = 30-d;
-        hscurve[ch_sel][n]->Draw("SAME");
+        hscurve[ch_sel][n]->Draw("HISTSAME");
 	//hscurve[ch_sel][d]->SetLineColor(n);
 	hscurve[ch_sel][n]->SetLineWidth(2);
     } 
@@ -842,13 +870,13 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   TCanvas *c3 =new TCanvas("c3","S-Curves_selected channel",1400,600);
   c3->Divide(2,1);
   c3->cd(1)->SetGrid();
-  hscurve[ch_sel][30]->Draw("");
+  hscurve[ch_sel][30]->Draw("HIST");
   hscurve[ch_sel][30]->GetXaxis()->SetTitle("Pulse amplitude [amp_cal_units]");
   hscurve[ch_sel][30]->GetYaxis()->SetTitle("Number of counts");
   hscurve[ch_sel][30]->SetLineWidth(2);
    for (d=d_min+1;d <31;d++) {
 	n = 30-d;
-        hscurve[ch_sel][n]->Draw("SAME");
+        hscurve[ch_sel][n]->Draw("HISTSAME");
 	//hscurve[ch_sel][d]->SetLineColor(n);
 	hscurve[ch_sel][n]->SetLineWidth(2);
     } 
@@ -993,6 +1021,9 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   h_adc_mean->Draw("");
   h_adc_mean->SetFillColor(kGreen-6);
   h_adc_mean->SetLineColor(kGreen-6);
+#ifdef KAZ_DEBUG
+      cout << "Fit option :SWL" << endl;
+#endif
   h_adc_mean->Fit("gaus", "SWL");
   h_adc_mean->GetXaxis()->SetTitle("Residuals [amp_cal_units]");
   h_adc_mean->GetYaxis()->SetTitle("Entries");
@@ -1144,13 +1175,13 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   
   TCanvas *c_all_scurves = new TCanvas("c_all_scurves","c_all_scurves", 1600, 800);
   c_all_scurves->cd()->SetGrid();
-  hscurve[0][0]->Draw("");
+  hscurve[0][0]->Draw("HIST");
   hscurve[0][0]->GetXaxis()->SetTitle("Vp [amp_cal_units]");
   hscurve[0][0]->GetYaxis()->SetTitle("Entries");
   cout << "WATCH OUT . DECISION regarding ch_max maybe wrong" << endl;
   for (ch = ch_min; ch<=ch_max; ch++){
     for (d=d_min; d<d_max+1; d++){
-      hscurve[ch][d]->Draw("same");
+      hscurve[ch][d]->Draw("HISTsame");
       //hscurve[ch][d]->SetLineColor(d);
     }
   }
@@ -1172,14 +1203,14 @@ void trim_adc::Display_histo_fast(int width_user, int* ch_comp){
   c_fast->Divide(2,2);
   
   c_fast->cd(1)->SetGrid();
-  hscurve[ch_sel][30]->Draw("");
+  hscurve[ch_sel][30]->Draw("HIST");
   hscurve[ch_sel][30]->SetTitle("S-curves comparison");
   hscurve[ch_sel][30]->GetXaxis()->SetTitle("Pulse amplitude [amp_cal_units]");
   hscurve[ch_sel][30]->GetYaxis()->SetTitle("Number of counts");
   hscurve[ch_sel][30]->GetXaxis()->SetRangeUser(vp_min, vp_min+80);
   hscurve[ch_sel][30]->SetLineWidth(2);
   hscurve[ch_sel][30]->SetLineColor(kRed);
-  hscurve[ch_sel][31]->Draw("SAME");
+  hscurve[ch_sel][31]->Draw("HISTSAME");
   hscurve[ch_sel][31]->SetLineColor(kBlue);
   hscurve[ch_sel][31]->SetLineWidth(2);
   
@@ -1202,18 +1233,24 @@ void trim_adc::Display_histo_fast(int width_user, int* ch_comp){
   pad1_h->Draw();
   pad2_h->Draw();
   pad1_h->cd()->SetGrid();  
-  hdcnt[ch_sel][30]->Draw("");
+  hdcnt[ch_sel][30]->Draw("HIST");
   hdcnt[ch_sel][30]->SetLineColor(kRed);
   hdcnt[ch_sel][30]->SetFillColor(kRed-10);
+#ifdef KAZ_DEBUG
+      cout << "Fit option :hdcnt   SWQR" << endl;
+#endif
   hdcnt[ch_sel][30]->Fit("gaus", "SWQR", "",thr_min, thr_max);
 //hdcnt[ch_sel][30]->Fit("gaus","SWLR","",vp_min+10, vp_max-20);
   hdcnt[ch_sel][30]->SetTitle("ADC disc_30");
   hdcnt[ch_sel][30]->GetXaxis()->SetTitle("Pulse amplitude [amp_cal_units]");
   hdcnt[ch_sel][30]->GetXaxis()->SetRangeUser(vp_min, vp_min+80);
   pad2_h->cd()->SetGrid();  
-  hdcnt[ch_sel][31]->Draw("");
+  hdcnt[ch_sel][31]->Draw("HIST");
   hdcnt[ch_sel][31]->SetLineColor(kBlue);
   hdcnt[ch_sel][31]->SetFillColor(kBlue-9);
+#ifdef KAZ_DEBUG
+      cout << "Fit option :hdcnt   SWQR" << endl;
+#endif
   hdcnt[ch_sel][31]->Fit("gaus", "SWQR", "",thr_min, thr_max);
   //hdcnt[ch_sel][31]->Fit("gaus","SWLR","",vp_min+10, vp_max-20);
   hdcnt[ch_sel][31]->SetTitle("FAST disc");
