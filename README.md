@@ -38,13 +38,13 @@ COMMENTS:
 			       for d>28, fit range is (0,80) why?
 			   Fit option: SWLQR
 			       S: results of the fit is returned in the TFitResultPTr
-			       W: ignore the bin uncertainties skip empty bin.
+			       W: ignore the bin uncertainties. skip empty bin.
 			       L: log likelihood
 			       Q: Quite mode
-			       R: Use the range specified in the function range.
+			       R: Use the range specified in the function range. (If this is true, I think R should not be used!)
+			       WL: Use loglikelihood method. histogram is weighted. 
 			   make hmeanf 2D histo. ch vs d.
 			   make hsigef 2D histo. ch vs d.
-			   
 		Fit_values_erfc (d<=30)
 		Fitting_Fast (only for d = 31)
 		
