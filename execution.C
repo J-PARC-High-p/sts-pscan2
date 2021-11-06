@@ -25,8 +25,8 @@ void Analysis(){
   int d_max = 31; // 5-bit ADC= 0-->31
   int d_step = 1;
   
-  int vp_min = 40;
-  int vp_max = 225;
+  int vp_min = 20;
+  int vp_max = 255;
   int vp_step = 1;
   
   // this value determines where to cut the double pulses, basically by forcing the data to stop in 200.
@@ -76,13 +76,14 @@ void Analysis(){
   sts->Analysis(cut_db_pulses, width, dcut_min_user, dcut_max_user, test_ch, true, true, read_fast);
   
   // Display everything. 
-  /*
+
   cout << "Display_histo_adc" << endl;
   sts->Display_histo_adc(width, dcut_min_user, dcut_max_user, ch_comp, grp_sel);
+
   if (read_fast == true) sts->Display_histo_fast(width,ch_comp);
   sts->Display_values(ch_comp);
   sts->Close_root_file();
-  */
+
 }
 
 // ............... oooo00000oooo........................
@@ -147,8 +148,8 @@ std::string Get_file_name(int i) {return file_names[i];}
 //! Executing the analysis 
 int execution(){
   
-  //filename_data = "pscan/pscan_20211102_RedFEB8.txt";
-  filename_data = "pscan_samples/pscan_190308_1533_sn_008_asic_addr_4_040_028_055_186_vp_000_255_040_holes"; // ommit .txt as it will be added in the class trim_adc.
+  filename_data = "pscan/pscan_20211102_RedFEB8";
+  //filename_data = "pscan_samples/pscan_190308_1533_sn_008_asic_addr_4_040_028_055_186_vp_000_255_040_holes"; // ommit .txt as it will be added in the class trim_adc.
   Analysis();
   return 0;
 }
