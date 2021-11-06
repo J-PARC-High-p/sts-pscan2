@@ -11,8 +11,8 @@ pscan/
 	pscan files created at KEK.
 
 COMMENTS:
-	execute() in execute.C will execute the process.
-	if inputfilename.root exists, just open the root file. Do not invoke the procedure.
+	execution() in execution.C will execute the process.
+	if inputfilename.root exists, just open the root file. It does not invoke the procedure.
 	filename should be without ".txt" as it will be added later in the class.
 
 
@@ -48,5 +48,25 @@ COMMENTS:
 		Fit_values_erfc (d<=30)
 		Fitting_Fast (only for d = 31)
 		
-		
-		
+
+USEFUL HISTOGRAMS:
+	h_adc_linearity is hmeanf->ProjectionY().
+	hmeanf = (128,0,128,31,0,31)  <-- Fill(ch,d,f_mean); f_mean is obtained by gaus fit to hdcnt.
+	h_quality_ch : hmeanf->ProjectionY
+
+amp_cal:
+	Qin[fC] vs amp_cal is listed in SMX manual.
+	Qin[fC] = Vin[mV]/10.
+	Qin[fC] = amp_cal*0.0521571+1.15926
+	    # basically linear. seems there is an offset=1.16[fC]
+            # I am not sure how linear for amp_cal = 0-16.
+trim:
+	adjustment of ADC discriminator.
+	trim   0: 150mV	  15fC(?)
+	trim 128: 0mV
+	trim 255: -150mV  -15fC(?)
+	According to manual, trim 0 corresponds to +150mV.
+	mv vs fC is not explicitly written in the SMX manual.
+	If the conversion is the same as the amp_cal, the adjustment is not just a fine tuning.
+	15fC is the full range of the amp_cal(!!!!)
+	
