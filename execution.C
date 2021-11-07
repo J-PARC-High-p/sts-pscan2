@@ -36,9 +36,11 @@ void Analysis(){
   
   // ............... oooo00000oooo........................
   //! Fitting windows variables window (Like in the previous) This will create the arrange for the cuttings.
-  // width determines the range to look for the peak (MEAN +/- width)
-  float amp_cal_min = 40.;   
-  float amp_cal_max = 226.;
+  // width determines the range to look for the peak (MEAN +/- width) 
+  //float amp_cal_min = 40.;   
+  //float amp_cal_max = 226.;
+  float amp_cal_min = 20.;   
+  float amp_cal_max = 240.;
   int width =35;
   
   int dcut_min_user = 6;    // start counting from 0
@@ -76,7 +78,6 @@ void Analysis(){
   sts->Analysis(cut_db_pulses, width, dcut_min_user, dcut_max_user, test_ch, true, true, read_fast);
   
   // Display everything. 
-
   cout << "Display_histo_adc" << endl;
   sts->Display_histo_adc(width, dcut_min_user, dcut_max_user, ch_comp, grp_sel);
 
