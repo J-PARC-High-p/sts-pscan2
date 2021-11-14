@@ -18,8 +18,11 @@ COMMENTS:
 
 	vcnt[ch][d][ivp] : count of ADC counters.
 			 ch: channel #. (0-127)
-			 d: ADC count. 0-31
+			 d: ADC counter number. 0-30 
 			 ivp: pulse height. (0-255)
+
+	5-bit usually suggests 0b11111 = 31. So I assumed that there are 0-31, 32 counters in total.
+	however, ADC counters are 0-30. Just couneters dont exist? or ADC=31 has special meaning such as underflow??
 		 
 		 if vcnt exceeds the maximum (cut_db_pulses) vcnt is made to be cut_db_pulses.
 	
@@ -70,3 +73,4 @@ trim:
 	If the conversion is the same as the amp_cal, the adjustment is not just a fine tuning.
 	15fC is the full range of the amp_cal(!!!!)
 	
+	D(amp_cal)=40 corresponds to 2.08fC = 20.8mv = 17.8 trim counts ???
