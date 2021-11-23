@@ -666,7 +666,6 @@ bool trim_adc::Fit_values_erfc(int width, int d_cut_min, int d_cut_max, int cut_
     f_s1mean_erfc = f_s1mean_erfc/d_max;
     
     delete f_erfc;
-    }
   }
   return true;
 }
