@@ -22,20 +22,25 @@ COMMENTS:
 			 ivp: pulse height. (0-255)
 
 	5-bit usually suggests 0b11111 = 31. So I assumed that there are 0-31, 32 counters in total.
-	however, ADC counters are 0-30. Just couneters dont exist? or ADC=31 has special meaning such as underflow??
+	however, ADC counters are 0-30.
+	31 is used to store Fast counter.
 		 
-		 if vcnt exceeds the maximum (cut_db_pulses) vcnt is made to be cut_db_pulses.
+	if vcnt exceeds the maximum (cut_db_pulses) vcnt is made to be cut_db_pulses.
 	
 	inside Analysis()
-	       Soft_val(true)
-	       		start with ivp=2;
-			basically copy vcn into vnc_soft.
-	
-		d_cnt is the difference of [ivp]and[ivp-1]. vnc_soft[ch][d][ivp]-vcn_soft[ch][d][ivp-1];
-		hdcnt[ch][d] is the difference (d_cnt)
-		hscurve[ch][d] is the vnc_soft itself.
+	    -Soft_val(...)
+			1:Soft_val(true)
+	    		start with ivp=2; <== NO.
+				basically copy vcn into vnc_soft.
+				if Soft_val(true), some clean up is done, which I don't understand the detail.
+			2:Soft_val(false)
+				just copy vpn into soft_vpn. This is good.
 		
-		Fit_values (d<=30)
+			d_cnt is the difference of [ivp]and[ivp-1]. vnc_soft[ch][d][ivp]-vcn_soft[ch][d][ivp-1];
+			hdcnt[ch][d] is the difference (d_cnt)
+			hscurve[ch][d] is the vnc_soft itself.
+		-prepare histogram.
+		-Fit_values (d<=30)
 			   Fit hdcnt
 			       find maximum bin. fit range: maximum-bin +- width. width is 35.specified in execute.C
 			       for d>28, fit range is (0,80) why?
@@ -48,7 +53,8 @@ COMMENTS:
 			       WL: Use loglikelihood method. histogram is weighted. 
 			   make hmeanf 2D histo. ch vs d.
 			   make hsigef 2D histo. ch vs d.
-		Fit_values_erfc (d<=30)
+		-Fit_values_erfc (d<=30)
+		-Calc_values (d<=30)
 		Fitting_Fast (only for d = 31)
 		
 
