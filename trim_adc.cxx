@@ -668,9 +668,6 @@ bool trim_adc::Fit_values_erfc(int width, int d_cut_min, int d_cut_max, int cut_
     delete f_erfc;
     }
   }
-  #ifdef KAZ_DEBUG
-  cout << "Fit_values_erfc returns true for now. check if it is ok." << endl;
-  #endif
   return true;
 }
 
@@ -746,10 +743,6 @@ bool trim_adc::Calc_values(int width, int d_cut_min, int d_cut_max)
    hsige->Fill(ch,d,sigma); 
     }
   }
-
-#ifdef KAZ_DEBUG
-  cout << "Calc_values returns true for now. check if it is ok." << endl;
-#endif
   return true;
 }
 
