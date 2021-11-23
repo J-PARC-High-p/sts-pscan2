@@ -286,6 +286,8 @@ bool trim_adc::Reading_file(int cut_db_pulses_user)
   std::string ele;
   
   std::cout<<"------------- Reading data file: -----------"<<std::endl;
+  std::cout<<"This script basically ignores vp values in the pscan txt file." << endl;
+  std::cout<<"Instead, use the hardcoded vp_min,vp_max,vp_step values to guess." << endl;
   
   for (vp =vp_min; vp<vp_max; vp+=vp_step) {
     for (ch =ch_min;ch<=ch_max; ch++){
@@ -326,7 +328,8 @@ void trim_adc::Analysis(int cut_db_pulses_user, int width_user, int dcut_min_use
   ch_sel = ch_sel_user;
 //   val_file.open(filename_val);
   
-  Soft_val(true);
+  //Soft_val(true);
+  Soft_val(false);
   
   cut_db_pulses = cut_db_pulses_user;
   for (ch=ch_min;ch<=ch_max;ch+=ch_step){
@@ -438,7 +441,6 @@ bool trim_adc::Soft_val(bool soft_flag)
   if (soft_flag==true){
     for (ch=ch_min;ch<=ch_max;ch+=ch_step){
       //for (d=d_min;d <d_max;d++){
-      cout << "DEBUG: inside Soft_val. Dealing with ch:" << ch << endl;
       for (d=d_min;d <=d_max+1;d++){
 	      ivp = 2;
 	      int soft_count =0;
@@ -479,7 +481,7 @@ bool trim_adc::Soft_val(bool soft_flag)
 	    for (d=d_min;d <d_max+1;d++){
 	    ivp = 0;
 	      for ( vp = vp_min; vp <vp_max; vp += vp_step ){
-	      vcnt_soft[ch][d][ivp] = vcnt[ch][d][ivp];    // isnt this should be vcnt[ch][d][vp] ???????
+	      vcnt_soft[ch][d][ivp] = vcnt[ch][d][ivp];
 	      ivp++;
 	      }
       }
@@ -500,115 +502,95 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
   d_cut_max = 30-d_cut_max;
   
   if (d_cut_min < 0 | d_cut_max > 30) return false;
-  else { 
-    if (d>=d_cut_max && d<=d_cut_min) {
-      int binmax = hdcnt[ch][d]->GetMaximumBin();
-      float x =hdcnt[ch][d]->GetXaxis()->GetBinCenter(binmax); 
+
+  if (d>=d_cut_max && d<=d_cut_min) {
+    int binmax = hdcnt[ch][d]->GetMaximumBin();
+    float x =hdcnt[ch][d]->GetXaxis()->GetBinCenter(binmax); 
       
       /*
-	thr_min = (int)(vp_set[d]-width); 
-	thr_max = (int)(vp_set[d]+width); 
+	      thr_min = (int)(vp_set[d]-width); 
+	      thr_max = (int)(vp_set[d]+width); 
       */
       
-      thr_min = (int)(x-width); 
-      thr_max = (int)(x+width); 
+    thr_min = (int)(x-width); 
+    thr_max = (int)(x+width); 
       
-      //if (thr_min< (int)(vp_set[d]-width)){ thr_min = vp_set[d]-width;}
-      //if (thr_max> (int)(vp_set[d]+width)){ thr_max = vp_set[d]+width;}
+    //if (thr_min< (int)(vp_set[d]-width)){ thr_min = vp_set[d]-width;}
+    //if (thr_max> (int)(vp_set[d]+width)){ thr_max = vp_set[d]+width;}
       
-      if (d >28 ){thr_min = 0.; thr_max = 80.;}
+    if (d >28 ){thr_min = 0.; thr_max = 80.;}
       
       
     fit_state0:
-      TFitResultPtr f_s1; 
-      //f_s1= hdcnt[ch][d]->Fit("gaus","SWLQR","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max
-#ifdef KAZ_DEBUG
-      cout << TString::Format("hdcnt[%d][%d]->Fit(\"gaus\",\"SWLQ\");",ch,d) << endl;
-      cout << "Starting point x = " << x << endl;
-      cout << "fit range " << thr_min << "," << thr_max << endl;
-#endif
-      f_s1= hdcnt[ch][d]->Fit("gaus","SWL","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max.
-      //f_s1= hdcnt[ch][d]->Fit("gaus","SWL"); // fitting disc in the range thr_min-thr_max
-      Int_t fitstatus = f_s1;
-      float mean_tmp =0;
-      float sigma_tmp =0;
+    TFitResultPtr f_s1; 
+    //f_s1= hdcnt[ch][d]->Fit("gaus","SWLQR","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max
+    #ifdef KAZ_DEBUG
+    cout << TString::Format("hdcnt[%d][%d]->Fit(\"gaus\",\"SWLQ\");",ch,d) << endl;
+    cout << "Starting point x = " << x << endl;
+    cout << "fit range " << thr_min << "," << thr_max << endl;
+    #endif
+    f_s1= hdcnt[ch][d]->Fit("gaus","SWL","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max.
+    //f_s1= hdcnt[ch][d]->Fit("gaus","SWL"); // fitting disc in the range thr_min-thr_max
+    Int_t fitstatus = f_s1;
+    float mean_tmp =0;
+    float sigma_tmp =0;
       
-      if ( fitstatus == 0 && hdcnt[ch][d]->GetFunction("gaus")->GetChisquare()!=0) {
-	
-	/*mean_tmp = f_s1->Parameter(1);
-	  sigma_tmp = f_s1->Parameter(2);
-	  TF1 *f1 = new TF1("f1", "gaus", mean_tmp-4*sigma_tmp, mean_tmp+4*sigma_tmp);
-	  f1->SetParameter(1,mean_tmp);
-	  
-	  hdcnt[ch][d]->Fit("f1","SWLQR","",mean_tmp-4*sigma_tmp, mean_tmp+4*sigma_tmp );
-	  
-	  
-	  f_s1mean+= hdcnt[ch][d]->GetFunction("f1")->GetParameter(1);
-	  f_sigma2 = hdcnt[ch][d]->GetFunction("f1")->GetParameter(2);
-	  f_mean = hdcnt[ch][d]->GetFunction("f1")->GetParameter(1);
-	  f_sigma = hdcnt[ch][d]->GetFunction("f1")->GetParameter(2);
-	*/
-	
-	f_s1mean+= f_s1->Parameter(1);
-	f_sigma2 = f_s1->Parameter(2);
-	f_mean = f_s1->Parameter(1);
-	f_sigma = f_s1->Parameter(2);
+    if ( fitstatus == 0 && hdcnt[ch][d]->GetFunction("gaus")->GetChisquare()!=0) {
+	    f_s1mean+= f_s1->Parameter(1);
+	    f_sigma2 = f_s1->Parameter(2);
+	    f_mean = f_s1->Parameter(1);
+	    f_sigma = f_s1->Parameter(2);
 
 
-	#ifdef KAZ_DEBUG
-	cout << TString::Format("hdcnt[%d][%d]  mean %lf",ch,d,f_mean) << endl;
-	#endif
+      #ifdef KAZ_DEBUG
+	    cout << TString::Format("hdcnt[%d][%d]  mean %lf",ch,d,f_mean) << endl;
+	    #endif
 	
-	if (d==30) f_mean_d1=f_s1->Parameter(1);
-	if (d==10) f_mean_d20=f_s1->Parameter(1);
-	if (d==0) f_mean_d30=f_s1->Parameter(1);
+	    if (d==30) f_mean_d1=f_s1->Parameter(1);
+	    if (d==10) f_mean_d20=f_s1->Parameter(1);
+	    if (d==0) f_mean_d30=f_s1->Parameter(1);
 	
-	//writefile<<f_mean<<'\t';
+	    //writefile<<f_mean<<'\t';
 	
-	if (f_mean!=0 && f_sigma2 >0.5){
-	  hdisc_sig[ch][d]->Fill(d,f_sigma2);
-	  hdisc_mean[ch][d]->Fill(d,f_mean);
-	  if (ch == ch_sel) {
-	    hfit_s2->Fill(d,f_sigma2);
-	    h_aux1->SetBinContent(d+1,f_mean);
-	    h_aux1->SetBinError(d+1,f_sigma2); 
-	    //h_aux2->Fill(d,mean);
-	  }
-	}
-	else {
-	  while (width > 5){
-	    width = width-5;
-	    thr_min = (int)(vp_set[d]-width); 
-	    thr_max = (int)(vp_set[d]+width); 
-	    goto fit_state0;
-	  }
-	}  
+	    if (f_mean!=0 && f_sigma2 >0.5){
+	      hdisc_sig[ch][d]->Fill(d,f_sigma2);
+	      hdisc_mean[ch][d]->Fill(d,f_mean);
+	      if (ch == ch_sel) {
+	        hfit_s2->Fill(d,f_sigma2);
+	        h_aux1->SetBinContent(d+1,f_mean);
+	        h_aux1->SetBinError(d+1,f_sigma2); 
+	        //h_aux2->Fill(d,mean);
+	      }
+	    } else {
+	      while (width > 5){
+	        width = width-5;
+	        thr_min = (int)(vp_set[d]-width); 
+	        thr_max = (int)(vp_set[d]+width); 
+	        goto fit_state0;
+	      } 
+	    }  
 	
-	if (f_sigma2 >0.5){
-	  f_s1sigma+= f_sigma2;
-	  d_counter++; 
-	}
+	    if (f_sigma2 >0.5){
+	      f_s1sigma+= f_sigma2;
+	      d_counter++; 
+	    }
 	//delete f1;
-      }
+    } else {
+	    cout << "fit not ok --- ch,d " << ch << " " << d  << endl;
+	  }     
+    cout<<endl; 
       
-      else {
-	cout << "fit not ok --- ch,d " << ch << " " << d  << endl;
-	
-      }     
-      cout<<endl; 
-      
-      //hmeanf->Fill(ch,d,f_mean);
-      int ibin = hmeanf->FindBin(ch,d);
-      hmeanf->SetBinContent(ibin,f_mean);
-      hmeanf->SetBinError(ibin,f_sigma);
-      cout << "Fill hmeanf with " << f_mean << " " << f_sigma << endl;
-      hsigef->Fill(ch,d,f_sigma);
-      f_s1mean = f_s1mean/d_max;
-    }
+    //hmeanf->Fill(ch,d,f_mean);
+    int ibin = hmeanf->FindBin(ch,d);
+    hmeanf->SetBinContent(ibin,f_mean);
+    hmeanf->SetBinError(ibin,f_sigma);
+    cout << "Fill hmeanf with " << f_mean << " " << f_sigma << endl;
+    hsigef->Fill(ch,d,f_sigma);
+    f_s1mean = f_s1mean/d_max;
   }
-#ifdef KAZ_DEBUG
+  #ifdef KAZ_DEBUG
   cout << "Fit_values returns true for now. check if it is ok." << endl;
-#endif
+  #endif
   return true;
 }
 
