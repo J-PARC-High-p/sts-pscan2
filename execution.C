@@ -22,10 +22,11 @@ void Analysis(){
   int grp_step = 1;
   
   int d_min = 0;
-  int d_max = 31; // 5-bit ADC= 0-->31
+  int d_max = 30; // ADC counters are prepared for 0->30. 31th is fast counter.
   int d_step = 1;
   
-  int vp_min = 20;
+  // The following values specify the scan range.
+  int vp_min = 0;
   int vp_max = 255;
   int vp_step = 1;
   
@@ -37,14 +38,15 @@ void Analysis(){
   // ............... oooo00000oooo........................
   //! Fitting windows variables window (Like in the previous) This will create the arrange for the cuttings.
   // width determines the range to look for the peak (MEAN +/- width) 
-  //float amp_cal_min = 40.;   
-  //float amp_cal_max = 226.;
+  // KAZ: 
   float amp_cal_min = 20.;   
   float amp_cal_max = 240.;
   int width =35;
   
-  int dcut_min_user = 6;    // start counting from 0
-  int dcut_max_user = 26;     // Largest possible value = 30
+//  int dcut_min_user = 6;    // start counting from 0
+//  int dcut_max_user = 26;     // Largest possible value = 30
+  int dcut_min_user = 0;    // start counting from 0
+  int dcut_max_user = 30;     // Largest possible value = 30
   
   // ............... oooo00000oooo........................
   //! Test channels and channels for displaying histograms
@@ -81,8 +83,13 @@ void Analysis(){
   cout << "Display_histo_adc" << endl;
   sts->Display_histo_adc(width, dcut_min_user, dcut_max_user, ch_comp, grp_sel);
 
-  if (read_fast == true) sts->Display_histo_fast(width,ch_comp);
+    if (read_fast == true) {
+      cout << "Display_histo_fast" << endl;
+      sts->Display_histo_fast(width,ch_comp);
+    }
+  cout << "Display_values" << endl;
   sts->Display_values(ch_comp);
+  cout << "Close_root_file" << endl;
   sts->Close_root_file();
 
 }
@@ -150,6 +157,10 @@ std::string Get_file_name(int i) {return file_names[i];}
 int execution(){
   
   filename_data = "pscan/pscan_20211102_RedFEB8";
+  //filename_data = "pscan/pscan_20211107_RedFEB8_trimof127_0_15_to_110";
+  //filename_data = "pscan/pscan_20211114_BlueFEB8_wunconnected_cable";
+  //filename_data = "pscan/pscan_20211114_BlueFEB8_wunconnected_cable_SMX4";
+  //filename_data = "pscan/pscan_20211114_BlueFEB8_wunconnected_cable_SMX4_2";
   //filename_data = "pscan_samples/pscan_190308_1533_sn_008_asic_addr_4_040_028_055_186_vp_000_255_040_holes"; // ommit .txt as it will be added in the class trim_adc.
   Analysis();
   return 0;

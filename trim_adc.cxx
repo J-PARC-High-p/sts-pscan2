@@ -36,7 +36,7 @@ trim_adc::trim_adc(TString filenameData)
   d_counter(0),
   d_counter1(0),
   d_min(0),
-  d_max(31),
+  d_max(30),   // 0->30 are the ADC counters. 31 is the fast counter.
   d_step(0),
   grp(0),
   grp_min(0),
@@ -89,14 +89,14 @@ trim_adc::trim_adc(TString filenameData)
   ch_sel(0)
 {
  for (ch=ch_min;ch<=ch_max; ch++) {
-    for (d =d_min; d<d_max+1; d++) {
+    for (d =d_min; d<=d_max+1; d++) {
       for (vp = vp_min;vp<vp_max; vp+=vp_step) {
-	vcnt[ch][d][vp] = 0;
-	vcnt_soft[ch][d][vp] = 0;
+      	vcnt[ch][d][vp] = 0;
+	      vcnt_soft[ch][d][vp] = 0;
       }
     } 
   }
-  for (d=d_min;d<=d_max;d++){
+  for (d=d_min;d<=d_max+1;d++){
      vp_set[d]=0;
   }
 }
@@ -301,11 +301,11 @@ bool trim_adc::Reading_file(int cut_db_pulses_user)
       iss>>ele;
       iss>>ele;
       cout << "vp " << fvp << "   ch " << ch <<  ":  ";
-      for (d=d_min;d<=d_max;d++) {
+      for (d=d_min;d<=d_max+1;d++) {
 	//for (d=d_min;d<d_max;d++){
-	iss>>vcnt[ch][d][ivp];
-	if (vcnt[ch][d][ivp] > cut_db_pulses) vcnt[ch][d][ivp] = cut_db_pulses;		// Comment this line to see the full s_curves; this is just for cutting double pulses after understand it. the value (i.e. 400) depends on the number of injected pulses. This is defined in the pscan file
-	printf("%4d ", vcnt[ch][d][ivp]);
+	      iss>>vcnt[ch][d][ivp];
+	      if (vcnt[ch][d][ivp] > cut_db_pulses) vcnt[ch][d][ivp] = cut_db_pulses;		// Comment this line to see the full s_curves; this is just for cutting double pulses after understand it. the value (i.e. 400) depends on the number of injected pulses. This is defined in the pscan file
+	      printf("%4d ", vcnt[ch][d][ivp]);
       }
       cout<<endl;  
     }
@@ -336,7 +336,7 @@ void trim_adc::Analysis(int cut_db_pulses_user, int width_user, int dcut_min_use
     d_counter_erfc = 0;
     
     
-    for (d=d_min;d <=d_max;d++) {
+    for (d=d_min;d <=d_max+1;d++) {   // [d_max+1] is used for fast adc.
       TString name;
       name = TString::Format("h_d_%d_%d",ch,d);
       hdcnt[ch][d]=new TH1F(name,"",300,0,300);
@@ -358,17 +358,27 @@ void trim_adc::Analysis(int cut_db_pulses_user, int width_user, int dcut_min_use
 #ifdef KAZ_DEBUG
 	//	cout << "DEBUG vp = " << vp << endl;
 #endif
-	d_cnt = vcnt_soft[ch][d][ivp]-vcnt_soft[ch][d][ivp-1];
-	//if (d_cnt <0 | d_cnt > 35) d_cnt =0;
-	if (d_cnt <0) d_cnt =0;
-	//sum_delta += d_cnt;
-	//sum_mean += vp*d_cnt;
-	//printf("%5d", vcnt[ch][d][ivp]);
-	vpe = (vp-0.5*vp_step) * 15. / 256 * 6258;
-	//if (abs(d_cnt) > 30) d_cnt = 5;
-	hdcnt[ch][d]->Fill(vp,d_cnt);
-	hscurve[ch][d]->Fill(vp,vcnt_soft[ch][d][ivp]);
-	ivp++;
+	      d_cnt = vcnt_soft[ch][d][ivp]-vcnt_soft[ch][d][ivp-1]; 
+	      // d_cnt is d[i]-d[i-1].
+	      //if (d_cnt <0 | d_cnt > 35) d_cnt =0;
+	      if (d_cnt <0) d_cnt =0;
+	      //sum_delta += d_cnt;
+	      //sum_mean += vp*d_cnt;
+	      //printf("%5d", vcnt[ch][d][ivp]);
+	      vpe = (vp-0.5*vp_step) * 15. / 256 * 6258;
+	      //if (abs(d_cnt) > 30) d_cnt = 5;
+	      double p1 = (double)vcnt_soft[ch][d][ivp]/cut_db_pulses;
+	      double p2 = (double)vcnt_soft[ch][d][ivp-1]/cut_db_pulses;
+	      double var1 = cut_db_pulses*p1*(1.-p1);
+	      double var2 = cut_db_pulses*p2*(1.-p2);
+	      double d_cnt_err = sqrt(var1 + var2);
+	      int ibin = hdcnt[ch][d]->FindBin(vp);
+	      hdcnt[ch][d]->SetBinContent(ibin,d_cnt);
+	      hdcnt[ch][d]->SetBinError(ibin,d_cnt_err);
+
+    	  //hdcnt[ch][d]->Fill(vp,d_cnt);
+	      hscurve[ch][d]->Fill(vp,vcnt_soft[ch][d][ivp]);
+	      ivp++;
       }
       
       
@@ -382,8 +392,8 @@ void trim_adc::Analysis(int cut_db_pulses_user, int width_user, int dcut_min_use
       //if (fit == true && d<31) Fit_values(width_user);
       //if (calc == true && d<31) Calc_values(width_user);
       if (fit == true && d<=30) {
-	Fit_values(width_user, dcut_min_user, dcut_max_user); 
-	Fit_values_erfc(width_user, dcut_min_user, dcut_max_user, cut_db_pulses);}
+	      Fit_values(width_user, dcut_min_user, dcut_max_user); 
+	      Fit_values_erfc(width_user, dcut_min_user, dcut_max_user, cut_db_pulses);}
       if (calc == true && d<=30) Calc_values(width_user, dcut_min_user, dcut_max_user);
       
       if (fast_fit == true && d==31) Fitting_Fast(width_user);
@@ -428,47 +438,52 @@ bool trim_adc::Soft_val(bool soft_flag)
   if (soft_flag==true){
     for (ch=ch_min;ch<=ch_max;ch+=ch_step){
       //for (d=d_min;d <d_max;d++){
-      for (d=d_min;d <d_max+1;d++){
-	 ivp = 2;
-	 int soft_count =0;
-	 int d_cnt0 = 0;
-	 int d_cnt1 = 0;
+      cout << "DEBUG: inside Soft_val. Dealing with ch:" << ch << endl;
+      for (d=d_min;d <=d_max+1;d++){
+	      ivp = 2;
+	      int soft_count =0;
+	      int d_cnt0 = 0;
+	      int d_cnt1 = 0;
 	 
-	 vcnt_soft[ch][d][0]= vcnt[ch][d][0];
-	 vcnt_soft[ch][d][1]= vcnt[ch][d][1];
-	 vcnt_soft[ch][d][vp_max-vp_min-1]= vcnt[ch][d][vp_max-vp_min-1];
-	 vcnt_soft[ch][d][vp_max-vp_min-2]= vcnt[ch][d][vp_max-vp_min-2];
-	 for ( vp = vp_min +2*vp_step; vp <vp_max-2*vp_step; vp += vp_step ){
-	   d_cnt0 = vcnt[ch][d][ivp]-vcnt[ch][d][ivp-1]; 
-	   d_cnt1 = vcnt[ch][d][ivp+1]-vcnt[ch][d][ivp];
-	   if (d_cnt0 < -10 &&  d_cnt1 > 10) {
-	     vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp+1])/2.);
-	   }else if (d_cnt0 >10 &&  d_cnt1 <-10) {
-	     vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp+1])/2.);
-	   } else {
-	     vcnt_soft[ch][d][ivp] = vcnt[ch][d][ivp];
-	   //vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp]+vcnt[ch][d][ivp+1])/3);
-	   //vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-2]+vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp]+vcnt[ch][d][ivp+1]+vcnt[ch][d][ivp+2])/5);
-	   //vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp])/2);
-	   }
-	   ivp++;
-	 }
-      }
+	      vcnt_soft[ch][d][0]= vcnt[ch][d][0];
+	      vcnt_soft[ch][d][1]= vcnt[ch][d][1];
+	      vcnt_soft[ch][d][vp_max-vp_min-1]= vcnt[ch][d][vp_max-vp_min-1];
+	      vcnt_soft[ch][d][vp_max-vp_min-2]= vcnt[ch][d][vp_max-vp_min-2];
+	      for ( vp = vp_min +2*vp_step; vp <vp_max-2*vp_step; vp += vp_step ){
+	        d_cnt0 = vcnt[ch][d][ivp]-vcnt[ch][d][ivp-1]; 
+	        d_cnt1 = vcnt[ch][d][ivp+1]-vcnt[ch][d][ivp];
+	        if (d_cnt0 < -10 &&  d_cnt1 > 10) {
+	          vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp+1])/2.);
+	        }else if (d_cnt0 >10 &&  d_cnt1 <-10) {
+	          vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp+1])/2.);
+	        } else {
+	          vcnt_soft[ch][d][ivp] = vcnt[ch][d][ivp];
+	          //vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp]+vcnt[ch][d][ivp+1])/3);
+	          //vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-2]+vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp]+vcnt[ch][d][ivp+1]+vcnt[ch][d][ivp+2])/5);
+	          //vcnt_soft[ch][d][ivp] = int((vcnt[ch][d][ivp-1]+vcnt[ch][d][ivp])/2);
+	        }
+          if ( vcnt_soft[ch][d][ivp] != vcnt[ch][d][ivp] ) {
+            cout << "DEBUG: inside Soft_val. vcnt_soft is different from vcnt for [ch,d,ivp] "
+              << ch << "," << d << "," << ivp << ". :"
+              << vcnt_soft[ch][d][ivp] << " vs " << vcnt[ch][d][ivp] << endl;
+          }
+	        ivp++;
+	      }
+      } 
     }
   }
   
   if (soft_flag == false){
     for (ch=ch_min;ch<=ch_max;ch+=ch_step){
        //for (d=d_min;d <d_max;d++){
-	for (d=d_min;d <d_max+1;d++){
-	 ivp = 0;
-	 for ( vp = vp_min; vp <vp_max; vp += vp_step ){
-	   vcnt_soft[ch][d][ivp] = vcnt[ch][d][ivp];
-	  ivp++;
-	}
+	    for (d=d_min;d <d_max+1;d++){
+	    ivp = 0;
+	      for ( vp = vp_min; vp <vp_max; vp += vp_step ){
+	      vcnt_soft[ch][d][ivp] = vcnt[ch][d][ivp];    // isnt this should be vcnt[ch][d][vp] ???????
+	      ivp++;
+	      }
       }
     }
-    
   }
   
   return true;
@@ -509,8 +524,10 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
       //f_s1= hdcnt[ch][d]->Fit("gaus","SWLQR","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max
 #ifdef KAZ_DEBUG
       cout << TString::Format("hdcnt[%d][%d]->Fit(\"gaus\",\"SWLQ\");",ch,d) << endl;
+      cout << "Starting point x = " << x << endl;
+      cout << "fit range " << thr_min << "," << thr_max << endl;
 #endif
-      f_s1= hdcnt[ch][d]->Fit("gaus","SWLQ","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max.
+      f_s1= hdcnt[ch][d]->Fit("gaus","SWL","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max.
       //f_s1= hdcnt[ch][d]->Fit("gaus","SWL"); // fitting disc in the range thr_min-thr_max
       Int_t fitstatus = f_s1;
       float mean_tmp =0;
@@ -575,7 +592,8 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
       }
       
       else {
-	cout << "fit not ok" << endl;
+	cout << "fit not ok --- ch,d " << ch << " " << d  << endl;
+	
       }     
       cout<<endl; 
       
@@ -583,6 +601,7 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
       int ibin = hmeanf->FindBin(ch,d);
       hmeanf->SetBinContent(ibin,f_mean);
       hmeanf->SetBinError(ibin,f_sigma);
+      cout << "Fill hmeanf with " << f_mean << " " << f_sigma << endl;
       hsigef->Fill(ch,d,f_sigma);
       f_s1mean = f_s1mean/d_max;
     }
@@ -975,9 +994,7 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   TH1D *py[128];
   for (int j = 1; j<=128;j++){
     ch =j-1;
-    char *h_adc_linearity = new char[16];
-    sprintf(h_adc_linearity, "h_quality_%d",ch);
-    py[ch] = hmeanf->ProjectionY(h_adc_linearity,j,j);
+    py[ch] = hmeanf->ProjectionY(TString::Format("h_quality_%d",ch),j,j);
     py[ch]->Write();
   }
   py[0]->Draw("");
@@ -1189,6 +1206,7 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   cout << "WATCH OUT . DECISION regarding ch_max maybe wrong" << endl;
   for (ch = ch_min; ch<=ch_max; ch++){
     for (d=d_min; d<d_max+1; d++){
+      //cout << "Accessing hscurve[" << ch << "][" << d << "]" << endl;
       hscurve[ch][d]->Draw("HISTsame");
       //hscurve[ch][d]->SetLineColor(d);
     }
