@@ -520,7 +520,6 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
       
     if (d >28 ){thr_min = 0.; thr_max = 80.;}
       
-      
     fit_state0:
     TFitResultPtr f_s1; 
     //f_s1= hdcnt[ch][d]->Fit("gaus","SWLQR","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max
@@ -529,7 +528,7 @@ bool trim_adc::Fit_values(int width, int d_cut_min, int d_cut_max)
     cout << "Starting point x = " << x << endl;
     cout << "fit range " << thr_min << "," << thr_max << endl;
     #endif
-    f_s1= hdcnt[ch][d]->Fit("gaus","SWL","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max.
+    f_s1= hdcnt[ch][d]->Fit("gaus","SWLQ","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max.
     //f_s1= hdcnt[ch][d]->Fit("gaus","SWL"); // fitting disc in the range thr_min-thr_max
     Int_t fitstatus = f_s1;
     float mean_tmp =0;
@@ -605,72 +604,62 @@ bool trim_adc::Fit_values_erfc(int width, int d_cut_min, int d_cut_max, int cut_
   int plateau = cut_db_pulses_user;
   
   if (d_cut_min < 0 | d_cut_max > 30) return false;
-  
-  else { 
-    if (d>=d_cut_max && d<=d_cut_min) {
-      int binmax = hdcnt[ch][d]->GetMaximumBin();
-      float x =hdcnt[ch][d]->GetXaxis()->GetBinCenter(binmax); 
+  if (d>=d_cut_max && d<=d_cut_min) {
+    int binmax = hdcnt[ch][d]->GetMaximumBin();
+    float x =hdcnt[ch][d]->GetXaxis()->GetBinCenter(binmax); 
       
-      /*
+    /*
       thr_min = (int)(vp_set[d]-width); 
       thr_max = (int)(vp_set[d]+width); 
-      */
+    */
       
-      width+=15;
-      thr_min = (int)(x-width); 
-      thr_max = (int)(x+width); 
+    width+=15;
+    thr_min = (int)(x-width); 
+    thr_max = (int)(x+width); 
       
       
       
-      //if (thr_min< (int)(vp_set[d]-2*width)) thr_min = vp_set[d]-3*width;
-      //if (thr_max> (int)(vp_set[d]+2*width)) thr_max = vp_set[d]+3*width;
-      if (d >28 ){thr_min = 0.; thr_max = 80.;}
+    //if (thr_min< (int)(vp_set[d]-2*width)) thr_min = vp_set[d]-3*width;
+    //if (thr_max> (int)(vp_set[d]+2*width)) thr_max = vp_set[d]+3*width;
+    if (d >28 ){thr_min = 0.; thr_max = 80.;}
       
-      TF1 *f_erfc = new TF1("f_erfc", "[0]-[1]*TMath::Erfc((x-[2])/(sqrt(2)*[3]))",0,250);
+    TF1 *f_erfc = new TF1("f_erfc", "[0]-[1]*TMath::Erfc((x-[2])/(sqrt(2)*[3]))",0,250);
       
-      fit_state0:
-      TFitResultPtr f_s1; 
-      //f_s1= hdcnt[ch][d]->Fit("f_erfc","SWLQR","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max
-      f_erfc->SetParameters(plateau,plateau/2,x,5);
-#ifdef KAZ_DEBUG
-      cout << TString::Format("hscurve[%d][%d]->Fit(\"f_erfc\",\"SWR\");",ch,d)  << endl;
-#endif
-      f_s1= hscurve[ch][d]->Fit("f_erfc", "SWR", "",thr_min, thr_max); // fitting disc in the range thr_min-thr_max
-      Int_t fitstatus = f_s1;
-      float mean_tmp =0;
-      float sigma_tmp =0;
+    fit_state0:
+    TFitResultPtr f_s1; 
+    //f_s1= hdcnt[ch][d]->Fit("f_erfc","SWLQR","",thr_min,thr_max); // fitting disc in the range thr_min-thr_max
+    f_erfc->SetParameters(plateau,plateau/2,x,5);
+    #ifdef KAZ_DEBUG
+    cout << TString::Format("hscurve[%d][%d]->Fit(\"f_erfc\",\"SWRQ\");",ch,d)  << endl;
+    #endif
+    f_s1= hscurve[ch][d]->Fit("f_erfc", "SWRQ", "",thr_min, thr_max); // fitting disc in the range thr_min-thr_max
+    Int_t fitstatus = f_s1;
+    float mean_tmp =0;
+    float sigma_tmp =0;
       
-      if ( fitstatus == 0 ) {
+    if ( fitstatus == 0 ) {
+		
+	    f_s1mean_erfc+= f_s1->Parameter(2);
+	    f_sigma2_erfc = f_s1->Parameter(3);
+	    f_mean_erfc = f_s1->Parameter(2);
+	    f_sigma_erfc = f_s1->Parameter(3);
 	
+		  if (ch == ch_sel) {
+	      hfit_s2_erfc->Fill(d,f_sigma2_erfc);
+	      h_aux1_erfc->SetBinContent(d+1,f_mean_erfc);
+	      h_aux1_erfc->SetBinError(d+1,f_sigma2_erfc); 
+	      //h_aux2->Fill(d,mean);
+	    }
 	
-	f_s1mean_erfc+= f_s1->Parameter(2);
-	f_sigma2_erfc = f_s1->Parameter(3);
-	f_mean_erfc = f_s1->Parameter(2);
-	f_sigma_erfc = f_s1->Parameter(3);
-	
-	/*
-	if (d==30) f_mean_d1=f_s1->Parameter(3);
-	if (d==10) f_mean_d20=f_s1->Parameter(3);
-	if (d==0) f_mean_d30=f_s1->Parameter(3);
-	*/
-	if (ch == ch_sel) {
-	    hfit_s2_erfc->Fill(d,f_sigma2_erfc);
-	    h_aux1_erfc->SetBinContent(d+1,f_mean_erfc);
-	    h_aux1_erfc->SetBinError(d+1,f_sigma2_erfc); 
-	    //h_aux2->Fill(d,mean);
-	  }
-	
-	if (f_sigma2_erfc >0.5){
-	  f_s1sigma_erfc+= f_sigma2_erfc;
-	  d_counter_erfc++; 
-	}
-	//delete f1;
-      }
-           
-      else {
-	  cout << "fit not ok" << endl;
-      }     
-      cout<<endl; 
+	    if (f_sigma2_erfc >0.5){
+	      f_s1sigma_erfc+= f_sigma2_erfc;
+	      d_counter_erfc++; 
+	    }
+	    //delete f1;
+    } else {
+	    cout << "fit not ok" << endl;
+    }     
+    cout<<endl; 
       
     hmeane_erfc->Fill(ch,d,f_mean_erfc);
     hsige_erfc->Fill(ch,d,f_sigma_erfc);
@@ -679,9 +668,9 @@ bool trim_adc::Fit_values_erfc(int width, int d_cut_min, int d_cut_max, int cut_
     delete f_erfc;
     }
   }
-#ifdef KAZ_DEBUG
+  #ifdef KAZ_DEBUG
   cout << "Fit_values_erfc returns true for now. check if it is ok." << endl;
-#endif
+  #endif
   return true;
 }
 
