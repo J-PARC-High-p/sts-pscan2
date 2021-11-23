@@ -25,7 +25,7 @@ void Analysis(){
   int d_max = 30; // ADC counters are prepared for 0->30. 31th is fast counter.
   int d_step = 1;
   
-  // The following values specify the scan range.
+  // The following values specify the scan range in the input text file.
   int vp_min = 0;
   int vp_max = 255;
   int vp_step = 1;
@@ -76,7 +76,6 @@ void Analysis(){
 
   // Analysis function in .cxx 
   // Analysis (cut_db_pulses, width, discriminators to exclude min, discriminator to exclude max, test channel to display, ADC noise fitting, ADC noise calc, find noise fast disc)
-  cout << "TEST " << endl;
   sts->Analysis(cut_db_pulses, width, dcut_min_user, dcut_max_user, test_ch, true, true, read_fast);
   
   // Display everything. 
