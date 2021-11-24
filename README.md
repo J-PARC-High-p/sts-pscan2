@@ -55,7 +55,7 @@ COMMENTS:
 			   make hsigef 2D histo. ch vs d.
 		-Fit_values_erfc (d<=30)
 		-Calc_values (d<=30)
-		Fitting_Fast (only for d = 31)
+		-Fitting_Fast (only for d = 31)
 		
 
 USEFUL HISTOGRAMS:
