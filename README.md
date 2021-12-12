@@ -18,11 +18,12 @@ COMMENTS:
 
 	vcnt[ch][d][ivp] : count of ADC counters.
 			 ch: channel #. (0-127)
-			 d: ADC counter number. 0-30 
+			 d: ADC counter number. 0-30. [31] is for Fast counter.
 			 ivp: pulse height. (0-255)
 
 	5-bit usually suggests 0b11111 = 31. So I assumed that there are 0-31, 32 counters in total.
 	however, ADC counters are 0-30.
+	Threshold for ADC1 is the trigger. ADC0 means there is not hit. Therefore, counting ADC0 is meaningless.(2021.12.12)
 	31 is used to store Fast counter.
 		 
 	if vcnt exceeds the maximum (cut_db_pulses) vcnt is made to be cut_db_pulses.
