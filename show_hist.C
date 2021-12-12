@@ -1,6 +1,13 @@
+#include <fstream>
+#include <string>
+
+using namespace std;
+
 void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
   TCanvas* c1 = new TCanvas("c1","c1",800,800);
   TFile* file = new TFile(filename);
+
+  ofstream out("trim.txt");
 
   int ch = 0;
   int ch_max = 127;
@@ -15,6 +22,11 @@ void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
 
   // SHOW h_quality_%d.
   c1->Print(outputname + "[","pdf");
+
+  TF1* func_calib = new TF1("func_calib","pol1");
+  func_calib->SetParameters(200,-6);
+  const double trim_amp = 18/12.5;
+  
   while(ch <= ch_max){
     for( int itmp = 0; itmp < 16;itmp ++){
       if (itmp == 0 ) {
@@ -22,10 +34,21 @@ void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
 	c1->Divide(4,4);
       }
       c1->cd(itmp+1);
+      string str;
+      str += string(TString::Format("ch:%4d",ch));
       TString name = TString::Format("h_quality_%d",ch);
       TH1D* hist = (TH1D*)file->Get(name);
       hist->SetTitle(name);
       hist->Draw();
+      
+      for(int i = 0;i<31; i++){
+	int ibin = hist->FindBin(i+0.001);
+	double var = hist->GetBinContent(ibin);
+	int adj = 128.-(func_calib->Eval(i) - var)*trim_amp;
+	str += string(TString::Format("%5d",adj));
+      }
+      str += string(TString::Format("%5d",0)); // dummy entry for FASTth.
+      out << str << endl;
       ch++;
       if ( ch > ch_max ) break;
     }
@@ -68,4 +91,5 @@ void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
   }
   c1->Clear();
   c1->Print(outputname + "]","PDF");
+  out.close();
 }
