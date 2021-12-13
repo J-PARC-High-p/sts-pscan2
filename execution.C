@@ -153,10 +153,15 @@ std::string Get_file_name(int i) {return file_names[i];}
 
 // ............... oooo00000oooo........................
 //! Executing the analysis 
-int execution(){
+int execution(const char* filename){
+  filename_data = filename;
   
-  filename_data = "pscan/pscan_20211102_RedFEB8";
-  //filename_data = "pscan/pscan_20211107_RedFEB8_trimof127_0_15_to_110";
+  //filename_data = "pscan/pscan_20211102_RedFEB8";
+  //filename_data = "pscan/pscan_20211204_RedFEB8_ASIC4";
+  //filename_data = "pscan/pscan_redfeb8_20211212_fifo8";
+  //filename_data = "pscan/pscan_redfeb8_20211212_fifo8_aftercalib";
+  
+//filename_data = "pscan/pscan_20211107_RedFEB8_trimof127_0_15_to_110";
   //filename_data = "pscan/pscan_20211114_BlueFEB8_wunconnected_cable";
   //filename_data = "pscan/pscan_20211114_BlueFEB8_wunconnected_cable_SMX4";
   //filename_data = "pscan/pscan_20211114_BlueFEB8_wunconnected_cable_SMX4_2";
