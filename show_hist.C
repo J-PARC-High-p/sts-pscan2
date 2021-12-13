@@ -34,9 +34,19 @@ void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
 	c1->Divide(4,4);
       }
       c1->cd(itmp+1);
+
+      /// FastTrim
+      TString name = TString::Format("h_d_%d_31",ch);
+      TH1D* hist_fast = (TH1D*)file->Get(name);
+      hist_fast->Fit("gaus");
+      TF1* func = hist_fast->GetFunction("gaus");
+      double var = func->GetParameter(0);
+      int fast_trim = -(var-20.)*0.675 + 36;
+
+
       string str;
       str += string(TString::Format("ch:%4d",ch));
-      TString name = TString::Format("h_quality_%d",ch);
+      name = TString::Format("h_quality_%d",ch);
       TH1D* hist = (TH1D*)file->Get(name);
       hist->SetTitle(name);
       hist->Draw();
@@ -47,7 +57,8 @@ void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
 	int adj = 128.-(func_calib->Eval(i) - var)*trim_amp;
 	str += string(TString::Format("%5d",adj));
       }
-      str += string(TString::Format("%5d",0)); // dummy entry for FASTth.
+
+      str += string(TString::Format("%5d",fast_trim)); // dummy entry for FASTth.
       out << str << endl;
       ch++;
       if ( ch > ch_max ) break;
