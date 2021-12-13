@@ -478,7 +478,7 @@ bool trim_adc::Soft_val(bool soft_flag)
   if (soft_flag == false){
     for (ch=ch_min;ch<=ch_max;ch+=ch_step){
        //for (d=d_min;d <d_max;d++){
-	    for (d=d_min;d <d_max+1;d++){
+	    for (d=d_min;d <=d_max+1;d++){
 	    ivp = 0;
 	      for ( vp = vp_min; vp <vp_max; vp += vp_step ){
 	      vcnt_soft[ch][d][ivp] = vcnt[ch][d][ivp];
