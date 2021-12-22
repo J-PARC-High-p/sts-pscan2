@@ -99,7 +99,7 @@ void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
 	TString name = TString::Format("h_scurve_%d_%d",ch,d);
 	TH1D* hist = (TH1D*)file->Get(name);
 	hist->SetTitle(name);
-	c1->GetPad(itmp+1)->SetLogy();
+	//c1->GetPad(itmp+1)->SetLogy();
 	hist->Draw("HIST");
 	name = TString::Format("h_d_%d_%d",ch,d);
 	TH1D* histd = (TH1D*)file->Get(name);
