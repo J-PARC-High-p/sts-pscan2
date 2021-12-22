@@ -14,7 +14,7 @@ void make_trim_raise_LowADC(const char* filename){
     int ch,var;
     int results = sscanf(buf,"%d %d",&ch,&var);
     if ( results != 2 ){
-      cout << "strange format : " << buf << endl;
+      //cout << "strange format : " << buf << endl;
       continue;
     }
     threshold[ch] = var;
