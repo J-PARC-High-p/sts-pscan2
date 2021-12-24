@@ -28,7 +28,8 @@ void Analysis(){
   // The following values specify the scan range in the input text file.
   int vp_min = 0;
   int vp_max = 255;
-  int vp_step = 4;
+  //int vp_step = 4;
+  int vp_step = sts->get_vpstep();
   
   // this value determines where to cut the double pulses, basically by forcing the data to stop in 200.
   // it has to be checked with the value of pulses in jected in the check trim.

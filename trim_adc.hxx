@@ -147,6 +147,7 @@ class trim_adc
 
 
 public:
+  int get_vpstep();
 
   bool Init_ch(int chMin, int chMax, int chStep=1);
 
@@ -177,7 +178,6 @@ private:
   void Fitting_Fast(int width);
   bool Soft_val(bool soft_flag=true);
 
-  int get_vpstep();
   
 public:
   ClassDef(trim_adc,0)
