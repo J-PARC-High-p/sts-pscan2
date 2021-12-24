@@ -28,7 +28,7 @@ void Analysis(){
   // The following values specify the scan range in the input text file.
   int vp_min = 0;
   int vp_max = 255;
-  int vp_step = 1;
+  int vp_step = 4;
   
   // this value determines where to cut the double pulses, basically by forcing the data to stop in 200.
   // it has to be checked with the value of pulses in jected in the check trim.
@@ -154,7 +154,12 @@ std::string Get_file_name(int i) {return file_names[i];}
 // ............... oooo00000oooo........................
 //! Executing the analysis 
 int execution(const char* filename){
-  filename_data = filename;
+  TString f = filename;
+  int ipos = f.Last('.');
+  if ( ipos >= 0 ) {
+    f.Remove(ipos);
+  }
+  filename_data = f;
   
   //filename_data = "pscan/pscan_20211102_RedFEB8";
   //filename_data = "pscan/pscan_20211204_RedFEB8_ASIC4";
@@ -166,6 +171,8 @@ int execution(const char* filename){
   //filename_data = "pscan/pscan_20211114_BlueFEB8_wunconnected_cable_SMX4";
   //filename_data = "pscan/pscan_20211114_BlueFEB8_wunconnected_cable_SMX4_2";
   //filename_data = "pscan_samples/pscan_190308_1533_sn_008_asic_addr_4_040_028_055_186_vp_000_255_040_holes"; // ommit .txt as it will be added in the class trim_adc.
+
+
   Analysis();
   return 0;
 }

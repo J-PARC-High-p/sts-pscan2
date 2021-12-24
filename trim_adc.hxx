@@ -176,6 +176,8 @@ private:
   bool Calc_values(int width, int d_cut_min, int d_cut_max); 
   void Fitting_Fast(int width);
   bool Soft_val(bool soft_flag=true);
+
+  int get_vpstep();
   
 public:
   ClassDef(trim_adc,0)

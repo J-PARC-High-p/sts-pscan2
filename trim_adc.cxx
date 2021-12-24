@@ -1376,3 +1376,23 @@ void trim_adc::Display_values(int* ch_comp)
   
 }
   
+int trim_adc::get_vpstep()
+{
+  ifstream in(filename_data);
+
+  char buf[1024];
+  while(true){
+    if ( in.eof() ) {
+      return 0;
+    }
+    in.getline(buf,1024);
+    std::stringstream ss(buf);
+    std::string ele;
+    int fvp;
+    int fch;
+    
+    ss >> ele >> fvp;
+    ss >> ele >> fch;
+  }
+  cout << "NOT IMPLEMENTED YET" << endl;
+}
