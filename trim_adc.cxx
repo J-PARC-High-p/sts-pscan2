@@ -295,13 +295,21 @@ bool trim_adc::Reading_file(int cut_db_pulses_user)
 	cout << "cannot read lines anymore " << endl;
 	return false;
       }
-      
+      if ( line[0] == '#' ) {
+	std::cout << "skip comment" << std::endl;
+	ch--;
+	continue;
+      }
       std::istringstream iss(line);
       //      cout << line << endl;
       iss>>ele;
       iss>>fvp;
       iss>>ele;
-      iss>>ele;
+      iss>>fch;
+      if (! ((fvp == vp) && (fch==ch)) ) {
+	std::cout << "something wrong about the entryies." << std::endl;
+	exit(1);
+      }
       cout << "vp " << fvp << "   ch " << ch <<  ":  ";
       for (d=d_min;d<=d_max+1;d++) {
 	//for (d=d_min;d<d_max;d++){
