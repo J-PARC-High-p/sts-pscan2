@@ -64,7 +64,9 @@ void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
       name = TString::Format("h_quality_%d",ch);
       TH1D* hist = (TH1D*)file->Get(name);
       hist->SetTitle(name);
-      hist->Draw();
+      TPad* pad = (TPad*)c1->GetPad(itmp+1);
+      pad->DrawFrame(0,0,31,280);      
+      hist->Draw("SAME");
       
       for(int i = 0;i<31; i++){
 	int ibin = hist->FindBin(i+0.001);

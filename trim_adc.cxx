@@ -1386,21 +1386,34 @@ void trim_adc::Display_values(int* ch_comp)
   
 int trim_adc::get_vpstep()
 {
-  ifstream in(filename_data);
+  ifstream in(filename_data + ".txt");
+
+  if ( !in ) return -1;
+  int prev_vp = -1;
 
   char buf[1024];
   while(true){
+    in.getline(buf,1024);
     if ( in.eof() ) {
       return 0;
     }
-    in.getline(buf,1024);
     std::stringstream ss(buf);
     std::string ele;
     int fvp;
     int fch;
-    
+    //cout << buf << endl;
     ss >> ele >> fvp;
     ss >> ele >> fch;
+    //cout << fvp << " for ch " << fch << endl;
+    if ( prev_vp == -1 ) {
+      prev_vp = fvp;
+    }else if ( prev_vp != fvp ) {
+      int step = fvp - prev_vp;
+      cout << "####################################################" << endl;
+      cout << "Test pulse step is assumed to be " << step << endl;
+      cout << "####################################################" << endl;
+      return step;
+    }
   }
-  cout << "NOT IMPLEMENTED YET" << endl;
+
 }
