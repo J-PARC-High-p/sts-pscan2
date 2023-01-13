@@ -305,7 +305,9 @@ bool trim_adc::Reading_file(int cut_db_pulses_user)
       iss>>ele;
       iss>>fvp;
       iss>>ele;
-      iss>>fch;
+      iss>>ele;
+      ele.erase(ele.find(":"));
+      fch = atoi(ele.c_str());
       if (! ((fvp == vp) && (fch==ch)) ) {
 	std::cout << "something wrong about the entryies." << std::endl;
 	exit(1);
@@ -817,7 +819,7 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   
   n =2;
   TCanvas *c2_erfc =new TCanvas("c2_erfc","c2_erfc");
-  //TF1 *f_erfc = new TF1("f_erfc", "[0]-[1]*TMath::Erfc((x-[2])/(sqrt(2)*[3]))",0,250);
+  TF1 *f_erfc = new TF1("f_erfc", "[0]-[1]*TMath::Erfc((x-[2])/(sqrt(2)*[3]))",0,250);
   c2_erfc->Divide(6,6);
   c2_erfc->cd(1);
   hscurve[ch_sel][30]->Draw("HIST");
@@ -836,7 +838,15 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   }
   c2_erfc->Write();
   c2_erfc->Close();
-  
+  #ifdef KAZ_DEBUG
+  cout << "Before deleting f_erfc" << endl;
+  #endif
+  delete f_erfc;
+  f_erfc = NULL;
+
+  #ifdef KAZ_DEBUG
+  cout << "Making c_scurves_selected" << endl;
+  #endif
   n=0;
   gStyle->SetOptStat(0);
   gStyle->SetOptFit(0);
@@ -848,7 +858,10 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   hscurve[ch_sel][30]->SetLineWidth(2);
   for (d=d_min+1;d <31;d++) {
 	  n = 30-d;
-    hscurve[ch_sel][n]->Draw("HISTSAME");
+	  if ( hscurve[ch_sel][n] == NULL ) {
+	    cout << " hscurve " << ch_sel << " " << n << " is NULL" << endl;
+	  }
+	  hscurve[ch_sel][n]->Draw("HISTSAME");
 	  //hscurve[ch_sel][d]->SetLineColor(n);
 	  hscurve[ch_sel][n]->SetLineWidth(2);
   } 
@@ -897,8 +910,13 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   h_aux1->Write();
   h_aux1_erfc->Write();
   
-  float par0 = h_aux1->GetFunction("pol1")->GetParameter(0);
-  float par1 = h_aux1->GetFunction("pol1")->GetParameter(1);
+  TF1* func_tmp = h_aux1->GetFunction("pol1");
+  float par0 = 0.;
+  float par1 = 0.;
+  if (func_tmp != NULL){
+    par0 = func_tmp->GetParameter(0);
+    par1 = func_tmp->GetParameter(1);
+  }
   float residuals = 0;
   
   pad2->cd()->SetGrid();
@@ -920,6 +938,7 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   c3->Close();
 
 
+  cout << "Making S-Curves_selected group canvas." << endl;
   int i=1;
   n = 0;
   TCanvas *c4 =new TCanvas("c4","S-Curves_selected group");
@@ -940,6 +959,7 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   c4->Write();
   c4->Close();
    
+  cout << "KAZ Breakpoint 4" << endl;
   TCanvas *c5 =new TCanvas("c5","Mean_and sigma_channels");
   c5->Divide(3,2);
   c5->cd(1);
@@ -990,9 +1010,15 @@ void trim_adc::Display_histo_adc(int width_user, int d_cut_min, int d_cut_max,  
   for (ch =ch_min; ch<=ch_max;ch+=ch_step){
     //if (ch>0 && ch< 127){
     py[ch]->Fit("pol1","R","",d_cut_max,d_cut_min+1);
-    float par1_adc = py[ch]->GetFunction("pol1")->GetParameter(1);
-    float par0_adc = py[ch]->GetFunction("pol1")->GetParameter(0);
-    float par2_adc = py[ch]->GetFunction("pol1")->GetChisquare();
+    TF1* func_tmp = py[ch]->GetFunction("pol1");
+    float par1_adc = 0.;
+    float par0_adc = 0.;
+    float par2_adc = 0.;
+    if ( func_tmp != NULL ){
+      par1_adc = func_tmp->GetParameter(1);
+      par0_adc = func_tmp->GetParameter(0);
+      par2_adc = func_tmp->GetChisquare();
+    }
     h_adc_slope->Fill(-1*par1_adc*0.056);
     h_adc_slope_ch->Fill(ch,-1*par1_adc*0.056);
     h_adc_int->Fill(par0_adc);
@@ -1247,8 +1273,11 @@ void trim_adc::Display_histo_fast(int width_user, int* ch_comp){
   hdcnt[ch_sel][31]->SetTitle("FAST disc");
   hdcnt[ch_sel][31]->GetXaxis()->SetTitle("Pulse amplitude [amp_cal_units]");
   hdcnt[ch_sel][31]->GetXaxis()->SetRangeUser(vp_min, vp_min+80);
-  
-  
+
+#ifdef KAZ_DEBUG
+      cout << "c_fast->cd(3)->SetGrid();" << endl;
+#endif
+ 
   c_fast->cd(3)->SetGrid();  
   TPad *pad1_m = new TPad("pad1_m","ADC",0,0,0.75,0.95,0);
   TPad *pad2_m = new TPad("pad2_m","FAST",0.76,0,1,0.95,0);
@@ -1301,6 +1330,9 @@ void trim_adc::Display_histo_fast(int width_user, int* ch_comp){
   //h_diff_fast_adc->SetFillStyle();
   //h_diff_fast_adc->Fit("gaus");
   
+#ifdef KAZ_DEBUG
+      cout << "c_fast->cd(4)->SetGrid();" << endl;
+#endif
   c_fast->cd(4)->SetGrid();
   
   for(ch=ch_min; ch<=ch_max; ch++){
@@ -1397,6 +1429,7 @@ int trim_adc::get_vpstep()
     if ( in.eof() ) {
       return 0;
     }
+    if ( buf[0] == '#' ) continue;
     std::stringstream ss(buf);
     std::string ele;
     int fvp;
