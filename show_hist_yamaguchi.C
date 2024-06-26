@@ -4,44 +4,68 @@
 
 using namespace std;
 
+
+/////////////////////binomial_error function////////////////////////////
+/////////////////////////////tmp??????????????????????????????????
 double binomial_err(double entry){
   double tmp = 0;
+
+//when "entry" is 0
   if(entry == 0){
     tmp = 1;
   }
+//when "entry" is 200
   else if(entry == 200){
     tmp = 199;
   }
+//when "enrty" is not 0 or 200
   else{
     tmp = entry;
   }
+
+//percentage of "entry" to 200 
   double p = tmp/200.;
   int n = 200;
 
+//1/binominal error
   return 1/sqrt(n*p*(1-p));
 }
 
+
+/////////////////////////////ENC function///////////////////////////////
 double ENC(double amp_cal){
+//change from sigma(callibration au) to sigma(charge)
   double qin = 0.05216*amp_cal; //sigma[amp_cal]->sigma[fC]
+
+//change from sigma(charge) to sigma(ENC:number of electron)
   double enc = qin / 1.6e-4; //ENC = e??? noise coulomb
+
+//return ENC
   return enc;
 
 }
 
+
+///////////////////////////Main function/////////////////////////////////
+//???????//////
 void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
+//preparation of canvas
   TCanvas* c1 = new TCanvas("c1","c1",800,800);
   TFile* file = new TFile(filename);
-  
-  TH2F *sig_ch[128];
+ 
+//2D hist per signal channel and put in array
+  TH2F *sig_ch[128];		//declear array
   for(int i=0;i<128;i++){
     sig_ch[i] = new TH2F("sig_ch","sig_ch",32,0,32,60,0,60);
   }
 
-  TH1D *sig_hist[128];
+//1D hist per signal channel and put in array
+  TH1D *sig_hist[128];		//declear array
   for(int i=0;i<128;i++){
     sig_hist[i] = new TH1D("sig_hist","sig_hist",60,0,60);
   }
 
+//????name the filename
   TString filename_trim = filename;
   int ipos = filename_trim.Last('.');
   if ( ipos >= 0 ) {
@@ -52,6 +76,7 @@ void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
     return;
   }
 
+//??Create the file("filename_trim")
   ofstream out(filename_trim);
 
   int ch = 0;
@@ -65,17 +90,17 @@ void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
     outputname = tmp + ".pdf";
   }
 
-  // SHOW h_quality_%d.
+
+// SHOW h_quality_%d.
   c1->Print(outputname + "[","pdf");
 
+//????Fitting////////////////////////////////////
   TF1* func_calib = new TF1("func_calib","pol1");
-  // 20-240. 
-  //func_calib->SetParameters(200,-6);
   func_calib->SetParameters(240,-7.33333333);
-  const double trim_amp = 18/12.5;
+  const double trim_amp = 18/12.5;////////////////////////////////??????????????????????????
   
   while(ch <= ch_max){
-    for( int itmp = 0; itmp < 16;itmp ++){
+    for( int itmp = 0; itmp < 16;itmp ++){/////////////////???????????????????????????????????
       if (itmp == 0 ) {
 	c1->Clear();
 	c1->Divide(4,4);
@@ -83,8 +108,10 @@ void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
       c1->cd(itmp+1);
 
       /// FastTrim
-      TString name = TString::Format("h_d_%d_31",ch);
+      TString name = TString::Format("h_d_%d_31",ch);///////////////??????????????????????
       TH1D* hist_fast = (TH1D*)file->Get(name);
+
+	//Fitting
       hist_fast->Fit("gaus","0");
       TF1* func = hist_fast->GetFunction("gaus");
       int fast_trim = 36;
@@ -212,9 +239,9 @@ void show_hist(const char* filename="pscan/pscan_20211102_RedFEB8.root"){
     c1->Print(outputname,"PDF");
 }
 
-  //Show the histgram of sigma
+//Show the histgram of sigma
 ch = 0;
- TH2D *enc_ch = new TH2D("enc_ch","enc_ch",128,0,128,5000,0,5000);
+ TH2D *enc_ch = new TH2D("enc_ch","enc_ch",128,0,128,10000,0,10000);
   while(ch <= ch_max){
     for(int itemp=0;itemp<8;itemp++){
       if(itemp == 0){

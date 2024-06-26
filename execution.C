@@ -1,9 +1,12 @@
 #include "trim_adc.hxx"
 #include "TString.h"
 #include "string"
+#include "dirent.h"
 
 TString filename_data;
 std::vector<string> file_names;
+DIR *fdir;
+struct dirent *entry;
 
 // ------------------------ This is the analysis function --------------------------
 
@@ -180,8 +183,7 @@ int execution(const char* filename){
 
 // ............... oooo00000oooo........................
 //! Executing the analysis 
-int execution_multi(){
-  
+int execution_multi(const char* filedir){
   // Here is the directory of the test files, same place where root files will be created
   //TString dir = "/home/paper-plane/CBM/test/feb_b/feb_b_setup1/glob_top/russ_febs/vref_t_scan/";
   //TString dir = "/home/paper-plane/CBM/test/feb_b/feb_b_setup2/temp_tests/feb-b_9/";
@@ -199,17 +201,33 @@ int execution_multi(){
   //TString dir = "/home/paper-plane/CBM/test/feb_b/feb_8_setup/pscan_files_modules/";
   //TString dir = "/home/paper-plane/CBM/test_beam_feb17/radiationTestResults/p_scan_files/";
   //TString dir = "/home/paper-plane/CBM/test/feb_b/feb_8_setup/mSTS/02Tl/pscan_files/";
-  TString dir = "/home/paper-plane/CBM/test/feb_b/feb_8_setup/mSTS/assembled/pscan_files/";
+ //TString dir = filedir;
   
   
   // reading file with list of measurements files.
-  Read_file_tests();
+  //Read_file_tests();
   // Analysis function is called for every file in the list. At the end, everything is closed and root files can be accessed via TBrowser
-  for (int i = 0; i<int(file_names.size()); i++){
-    filename_data= dir + TString(Get_file_name(i));
-    Analysis();
-  }
+  //for (int i = 0; i<int(file_names.size()); i++){
+   // filename_data= dir + TString(Get_file_name(i));
+   // Analysis();
+ // }
+    fdir = opendir(filedir);
+
+    if (fdir == NULL) {
+        perror("ディレクトリを開けません");
+        return 1;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(fdir)) != NULL) {
+        if (entry->d_type == DT_REG) {
+            char filePath[256];
+            snprintf(filePath, sizeof(filePath), "%s/%s",filedir, entry->d_name);
+            execution(filePath);
+        }
+    }
+    closedir(fdir);
   
-  
+
   return 0;
 }
