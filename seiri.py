@@ -7,7 +7,11 @@ import re  # 正規表現モジュールを追加
 # EfuseMap.json のパス
 efuse_map_path = './EfuseMap.json'
 # ファイルを分類したいディレクトリのパス
+<<<<<<< HEAD
 directory_a_path = '../data/2023_pfar/pscan/20231121_pscan_Scan_after_Run113'
+=======
+#directory_a_path ='/home/ryamada/pscan_data/20231120_pscan_104PN_107P_108PN'
+>>>>>>> edcde05db87044102d0957169e96222ecec989b3
 
 # EfuseMap.json を読み込む
 with open(efuse_map_path, 'r') as file:

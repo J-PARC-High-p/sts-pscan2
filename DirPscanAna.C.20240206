@@ -212,15 +212,9 @@ void DirPscanAna(const char* dirpath){
                 sig_ch[i] = new TH2F("sig_ch","sig_ch",32,0,32,60,0,60);
             }
 
-<<<<<<< HEAD
             TH1D *sig_hist[NumOfStrips];
             for(int i=0;i<NumOfStrips;i++){
                 sig_hist[i] = new TH1D("sig_hist","sig_hist",60,0,60);
-=======
-//            TH1D *sig_adc_noise_hist[NumOfStrips];
-//            for(int i=0;i<NumOfStrips;i++){
-//                sig_adc_noise_hist[i] = new TH1D("sig_adc_noise_hist","sig_adc_noise_hist",60,0,60);
->>>>>>> edcde05db87044102d0957169e96222ecec989b3
             }
 
             TString filename_trim = filename;
@@ -335,12 +329,7 @@ void DirPscanAna(const char* dirpath){
                     //fast_noise
                     TString name_fast_noise = TString::Format("h_d_%d_31",ch);
                     TH1D* hist_fast_noise = (TH1D*)file->Get(name_fast_noise);
-<<<<<<< HEAD
                     hist_fast_noise->Fit("gaus","Q0");
-=======
-  //                  //hist_fast_noise->Fit("gaus","Q0");
-  //                  hist_fast_noise->Fit("gaus","SWLQR","",20,70);
->>>>>>> edcde05db87044102d0957169e96222ecec989b3
                     TF1* func_fast_noise = hist_fast_noise->GetFunction("gaus");
                     if ( func_fast_noise != NULL ){
                         double fast_sigma = func_fast_noise ->GetParameter(2);
@@ -389,19 +378,6 @@ void DirPscanAna(const char* dirpath){
                 c1->Print(out_pdf,"PDF");
                 //getchar();
             }//--3333333 Layer3-1 END --3333333--
-<<<<<<< HEAD
-=======
-//
-//
-//            TH1F* hnoise_fast = (TH1F*)file->Get("hnoise_fast");
-//            std::cout << "==========================hist_noise_fast" << std::endl;
-//
-//            TString name_f = TString::Format("hmeanf");
-//            std::cout << "==========================name: " << name_f << std::endl;
-//            TH2F* hmeanf = (TH2F*)file->Get(name_f);
-//            std::cout << "==========================hist_adc_th: " << hmeanf << std::endl;
-
->>>>>>> edcde05db87044102d0957169e96222ecec989b3
             c1->Clear();
             c1->cd(1);
             TH1F *bg0=new TH1F("bg0","adc&fast_thr",128,0,128);
@@ -431,42 +407,7 @@ void DirPscanAna(const char* dirpath){
             c1->Update();
             c1->Print(out_pdf, "PDF");
 
-<<<<<<< HEAD
 
-=======
-  //          c1->Clear();
-  //          c1->cd(1);
-    //        TH1F *bgx=new TH1F("bgx","hnoise_fast",128,0,128);
-      //      bgx->SetXTitle("strip_ch");
-        //    bgx->SetYTitle("ENC");
-          //  bgx->SetMaximum(8000);
-	    //    bgx->SetMinimum(0);
-//            bgx->SetStats(0);
- //           bgx->Draw();
-   //         hnoise_fast->SetMarkerStyle(8);
-     //       hnoise_fast->SetMarkerSize(0.8);
-       //     hnoise_fast->SetMarkerColor(kRed);
-      //      hnoise_fast->Draw("same");
-       //     hist_ch_fast_noise->SetMarkerColor(kBlue);
-         //   hist_ch_fast_noise->Draw("same");
-           // c1->Update();
-//            c1->Print(out_pdf, "PDF");
-//
-  //          c1->Clear();
-    //        c1->cd(1);
-      //      hmeanf->Draw();
-        //    c1->Update();
-          //  c1->Print(out_pdf, "PDF");
-
-            /*c1->Clear();
-            c1->cd(1);
-            //TH1D *pj = hmeanf->ProjectionX("hmeanf",31,31);
-            pj->Draw();
-            c1->Update();
-            c1->Print(out_pdf, "PDF");*/
-
-            //TH2D *hist_ch_fast_noise_new = new TH2D("hist_ch_fast_noise_new","hist_ch_fast_noise_new",NumOfStrips,0,NumOfStrips,RangeY,0,RangeY);
->>>>>>> edcde05db87044102d0957169e96222ecec989b3
             // SHOW scurve and dcnt
             int d_max = 31;
             for( int ch = 0;ch<=ch_max;ch++){//--3333333-- Layer3-2 --3333333--
@@ -531,31 +472,15 @@ void DirPscanAna(const char* dirpath){
                         gStyle->SetOptFit(1);
                         //double chi2 = erf->GetChisquare();
                         double chi2 = chi2_previous;
-<<<<<<< HEAD
                         int NDF = erf->GetNDF();
-=======
-              //          int NDF = erf->GetNDF();//自由度
->>>>>>> edcde05db87044102d0957169e96222ecec989b3
                         //double sigma = erf->GetParameter(0);
                         int bin1 = hist_scurve->GetBinContent(1);
                         sig_ch[ch]->Fill(d,sigma);
                         //if(chi2 <= 20 && bin1 < 200, ){
-<<<<<<< HEAD
                         if(chi2/NDF <= 20 && bin1 < 200 && sigma<15 && d!=31){
                             sig_hist[ch]->Fill(sigma);
                         }else{excepted_sigma_cnt++;}
 
-=======
-                //        if(chi2/NDF <= 20 && bin1 < 200 && sigma<15 && d!=31){//chi2/NDF <= 20 ->モデルの適応具合
-                  //          sig_adc_noise_hist[ch]->Fill(sigma);//adcのsigmaのみ。d=0-30を射影
-                    //    }else{excepted_sigma_cnt++;}
-//
-  //                      if(d==31){
-    //                        double sigma_enc = ENC(sigma);
-      //                      hist_ch_fast_noise_new->Fill(ch,sigma_enc);
-     //                   }
-
->>>>>>> edcde05db87044102d0957169e96222ecec989b3
                         TF1 *erf2 = new TF1("erf2","erf",0,300);
                         //erf2->SetParameters(erf->GetParameters());
                         erf2->SetParameters(sigma, x0);
@@ -611,11 +536,7 @@ void DirPscanAna(const char* dirpath){
 
             //Show the histgram of sigma
             ch = 0;
-<<<<<<< HEAD
             TH2D *enc_ch = new TH2D("enc_ch","hist_ch_adc_noise",NumOfStrips,0,NumOfStrips,RangeY,0,RangeY);
-=======
-        //    TH2D *hist_ch_adc_noise = new TH2D("hist_ch_adc_noise","hist_ch_adc_noise",NumOfStrips,0,NumOfStrips,RangeY,0,RangeY);
->>>>>>> edcde05db87044102d0957169e96222ecec989b3
             while(ch <= ch_max){
                 for(int itemp=0;itemp<8;itemp++){
                     if(itemp == 0){
@@ -623,28 +544,16 @@ void DirPscanAna(const char* dirpath){
                         c1->Divide(2,4);
                     }
                     c1->cd(itemp+1);
-<<<<<<< HEAD
                     TString hist_name = TString::Format("sigma_ch_%d",ch);
                     sig_hist[ch]->Draw();
                     sig_hist[ch]->SetTitle(hist_name);
                     sig_hist[ch]->Fit("gaus","Q","",1,25);
                     TF1 *func3 = sig_hist[ch]->GetFunction("gaus");
-=======
-          //          TString hist_name = TString::Format("sigma_adc_noise_ch_%d",ch);
-            //        sig_adc_noise_hist[ch]->Draw();
-              //      sig_adc_noise_hist[ch]->SetTitle(hist_name);
-                //    sig_adc_noise_hist[ch]->Fit("gaus","Q","",1,25);////////////////////////////////////////////////////////////
-                  //  TF1 *func3 = sig_adc_noise_hist[ch]->GetFunction("gaus");
->>>>>>> edcde05db87044102d0957169e96222ecec989b3
                     if ( func3 != NULL ) {
                         double mean = func3->GetParameter(1);
                         double enc = ENC(mean);
                         //cout << enc << endl;
-<<<<<<< HEAD
                         enc_ch->Fill(ch,enc);
-=======
-                    //    hist_ch_adc_noise->Fill(ch,enc);
->>>>>>> edcde05db87044102d0957169e96222ecec989b3
                         if(Pol=="N-side"){
                             h_all_N_adc_noise->Fill(ch+NumOfStrips*AsicNo, enc);
                             h_all_N->Fill(ch+NumOfStrips*AsicNo, enc);
@@ -667,7 +576,6 @@ void DirPscanAna(const char* dirpath){
             c1->Clear();
             c1->cd(1);
 
-<<<<<<< HEAD
             enc_ch->Draw();
             c1->Update();
             c1->Print(out_pdf, "PDF");
@@ -680,29 +588,6 @@ void DirPscanAna(const char* dirpath){
             delete func_calib;
             delete c1;
             delete enc_ch;
-=======
-       //     hist_ch_adc_noise->Draw();
-         //   c1->Update();
-           // c1->Print(out_pdf, "PDF");
-//
-  //          c1->Clear();
-    //        c1->cd(1);
-//
-  //          hist_ch_fast_noise_new->Draw();
-    //        c1->Update();
-      //      c1->Print(out_pdf, "PDF");
-  //          c1->Print(out_pdf +"]","PDF");
-//
-    //        out_trim.close();
-      //      for (int ch=0; ch<NumOfStrips; ch++){
-        //         delete sig_ch[ch];
-          //       delete sig_adc_noise_hist[ch];
-           // }
-//            delete func_calib;
-  //          delete c1;
-    //        delete hist_ch_adc_noise;
-      //      delete hist_ch_fast_noise_new;
->>>>>>> edcde05db87044102d0957169e96222ecec989b3
             delete file;
 
         }//--2222222-- if(root file) Layer2 END --2222222--
