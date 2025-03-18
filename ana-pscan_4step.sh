@@ -12,8 +12,8 @@ execution_multi("$DIR")
 .q
 EOF
 root -b <<EOF
-.L DirPscanAna_afterrun0e.C
-DirPscanAna("$DIR")
+.L DirPscanAna.C
+DirPscanAna("$DIR", 4)
 .q
 EOF
 	
