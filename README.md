@@ -3,7 +3,7 @@
 pscan analysis
 
    original by Osnan et al.(?)
-   modified by K. Aoki
+   modified by K. Aoki, S. Hashimoto
 ======================================================
 pscan_samples/
 	pscan files created at GSI.
@@ -81,3 +81,13 @@ trim:
 	15fC is the full range of the amp_cal(!!!!)
 	
 	D(amp_cal)=40 corresponds to 2.08fC = 20.8mv = 17.8 trim counts ???
+
+# 2025.03.18  Note by S. Hashimoto
+使い勝手のためにいくつか変更を加えました。現状、
+```
+$ ana-pscan\_1step.sh 【pscan dataのあるディレクトリ】
+$ ana-pscan\_4step.sh 【pscan dataのあるディレクトリ】
+```
+をすればとりあえず解析が回るようになっています。
+シェルスクリプトの中身はstep数の数字が違うだけです。
+実行時に変数与える仕様にしても良い。
