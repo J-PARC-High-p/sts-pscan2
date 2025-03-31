@@ -99,6 +99,7 @@ $ ana-pscan\_4step.sh 【pscan dataのあるディレクトリ】
 ・dir名は最後に"/"を忘れずに.
 
 生成されるfileは以下
+```
 A. *.root
 GSI解析結果
 
@@ -119,4 +120,4 @@ E. rlt_P/N_out.root
 pscan結果の全てのasicのまとめ
 
 F. *_trim.txt は使用していない
-
+```
