@@ -92,3 +92,31 @@ $ ana-pscan\_4step.sh 【pscan dataのあるディレクトリ】
 シェルスクリプトの中身はstep数の数字が違うだけです。
 実行時に変数与える仕様にしても良い。
 重要:dir名は最後に"/"を忘れずに.
+
+# 2025.03.31 Note by R. Yamada
+注意事項
+・EfuseMapを読んで、ASICを並び替えているので必要
+・dir名は最後に"/"を忘れずに.
+
+生成されるfileは以下
+A. *.root
+GSI解析結果
+
+B. *.pdf
+最初の方: ADC校正直線横軸はADC chと逆
+Sカーブ: FASTの緑の山はDCNTのfitting
+最後: 赤はADC, 青はFAST
+
+C. *_ADCcalib.txt
+*.pdfでの校正直線(赤線)をもとに、strip_ch毎のadc
+
+D. ADCcalib.dat
+全てのasicのfc値
+[module] [p0/n1?] [strip#] [adc] [fC] 
+この.datを全てのmodule結合したら、そのまま解析に現状使用できる
+
+E. rlt_P/N_out.root
+pscan結果の全てのasicのまとめ
+
+F. *_trim.txt は使用していない
+
